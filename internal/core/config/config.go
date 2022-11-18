@@ -1,12 +1,12 @@
 package config
 
 import (
+	"gopkg.in/yaml.v2"
 	"os"
 
-	"github.com/speakeasy-api/rest-template-go/internal/core/drivers/psql"
-	"github.com/speakeasy-api/rest-template-go/internal/core/errors"
-	"github.com/speakeasy-api/rest-template-go/internal/core/listeners/http"
-	"gopkg.in/yaml.v2"
+	"github.com/superhorsy/quest-app-backend/internal/core/drivers/psql"
+	"github.com/superhorsy/quest-app-backend/internal/core/errors"
+	"github.com/superhorsy/quest-app-backend/internal/core/listeners/http"
 )
 
 const (

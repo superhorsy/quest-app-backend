@@ -1,6 +1,9 @@
 package events
 
-import "github.com/speakeasy-api/rest-template-go/internal/users/model"
+import (
+	questModel "github.com/superhorsy/quest-app-backend/internal/quests/model"
+	userModel "github.com/superhorsy/quest-app-backend/internal/users/model"
+)
 
 // EventType represents the type of event that occurred.
 type EventType string
@@ -16,7 +19,13 @@ const (
 
 // UserEvent represents an event that occurs on a user entity.
 type UserEvent struct {
-	EventType EventType   `json:"event_type"`
-	ID        string      `json:"id"`
-	User      *model.User `json:"user"`
+	EventType EventType       `json:"event_type"`
+	ID        string          `json:"id"`
+	User      *userModel.User `json:"user"`
+}
+
+type QuestEvent struct {
+	EventType EventType         `json:"event_type"`
+	ID        string            `json:"id"`
+	Quest     *questModel.Quest `json:"quest"`
 }

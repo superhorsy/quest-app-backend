@@ -2,18 +2,18 @@ package psql
 
 import (
 	"context"
-
 	"github.com/golang-migrate/migrate/v4"
+
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // import file driver for migrate
-	"github.com/speakeasy-api/rest-template-go/internal/core/errors"
-	"github.com/speakeasy-api/rest-template-go/internal/core/logging"
+	"github.com/superhorsy/quest-app-backend/internal/core/errors"
+	"github.com/superhorsy/quest-app-backend/internal/core/logging"
 )
 
 const (
 	// ErrDriverInit is returned when we cannot initialize the driver.
 	ErrDriverInit = errors.Error("failed to initialize postgres driver")
-	// ErrMigrateInit is returned when we cannot initialize the migrate driver.
+	// ErrMigrateInit is returned when we cannot initialize migration driver.
 	ErrMigrateInit = errors.Error("failed to initialize migration driver")
 	// ErrMigration is returned when we cannot run a migration.
 	ErrMigration = errors.Error("failed to migrate database")

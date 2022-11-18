@@ -1,14 +1,14 @@
-//go:generate mockgen -destination=./mocks/users_mock.go -package mocks github.com/speakeasy-api/rest-template-go/internal/users Store,Events
+//go:generate mockgen -destination=./mocks/users_mock.go -package mocks github.com/superhorsy/quest-app-backend/internal/users Store,Events
 
 package users
 
 import (
 	"context"
 
-	"github.com/speakeasy-api/rest-template-go/internal/core/errors"
-	"github.com/speakeasy-api/rest-template-go/internal/core/logging"
-	"github.com/speakeasy-api/rest-template-go/internal/events"
-	"github.com/speakeasy-api/rest-template-go/internal/users/model"
+	"github.com/superhorsy/quest-app-backend/internal/core/errors"
+	"github.com/superhorsy/quest-app-backend/internal/core/logging"
+	"github.com/superhorsy/quest-app-backend/internal/events"
+	"github.com/superhorsy/quest-app-backend/internal/users/model"
 	"go.uber.org/zap"
 )
 

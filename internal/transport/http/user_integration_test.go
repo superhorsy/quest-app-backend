@@ -13,11 +13,11 @@ import (
 	"github.com/AlekSi/pointer"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
-	httptransport "github.com/speakeasy-api/rest-template-go/internal/transport/http"
-	"github.com/speakeasy-api/rest-template-go/internal/transport/http/mocks"
-	"github.com/speakeasy-api/rest-template-go/internal/users/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	httptransport "github.com/superhorsy/quest-app-backend/internal/transport/http"
+	"github.com/superhorsy/quest-app-backend/internal/transport/http/mocks"
+	"github.com/superhorsy/quest-app-backend/internal/users/model"
 )
 
 const (

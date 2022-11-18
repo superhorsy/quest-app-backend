@@ -1,14 +1,15 @@
-//go:generate mockgen -destination=./mocks/http_mock.go -package mocks github.com/speakeasy-api/rest-template-go/internal/transport/http Users,DB
+//go:generate mockgen -destination=./mocks/http_mock.go -package mocks github.com/superhorsy/quest-app-backend/internal/transport/http Users,DB
 
 package http
 
 import (
 	"context"
 	"encoding/json"
+	questModel "github.com/superhorsy/quest-app-backend/internal/quests/model"
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/speakeasy-api/rest-template-go/internal/users/model"
+	"github.com/superhorsy/quest-app-backend/internal/users/model"
 )
 
 // Users represents a type that can provide CRUD operations on users.
@@ -20,22 +21,29 @@ type Users interface {
 	DeleteUser(ctx context.Context, id string) error
 }
 
+// Quests represents a type that can provide CRUD operations on quests.
+type Quests interface {
+	CreateQuest(ctx context.Context, user *questModel.Quest) (*questModel.Quest, error)
+}
+
 // DB represents a type that can be used to interact with the database.
 type DB interface {
 	PingContext(ctx context.Context) error
 }
 
-// Server represents a HTTP server that can handle requests for this microservice.
+// Server represents an HTTP server that can handle requests for this microservice.
 type Server struct {
-	users Users
-	db    DB
+	users  Users
+	quests Quests
+	db     DB
 }
 
 // New will instantiate a new instance of Server.
-func New(u Users, db DB) *Server {
+func New(u Users, q Quests, db DB) *Server {
 	return &Server{
-		users: u,
-		db:    db,
+		users:  u,
+		quests: q,
+		db:     db,
 	}
 }
 
@@ -44,6 +52,9 @@ func (s *Server) AddRoutes(r *mux.Router) error {
 	r.HandleFunc("/health", s.healthCheck).Methods(http.MethodGet)
 
 	r = r.PathPrefix("/v1").Subrouter()
+
+	//r.HandleFunc("/login", s.createUser).Methods(http.MethodPost)
+	r.HandleFunc("/quest", s.createQuest).Methods(http.MethodPost)
 
 	r.HandleFunc("/user", s.createUser).Methods(http.MethodPost)
 	r.HandleFunc("/user/{id}", s.getUser).Methods(http.MethodGet)

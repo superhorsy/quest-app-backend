@@ -3,15 +3,15 @@ package config
 import (
 	"context"
 	"fmt"
-	"os"
-
 	"github.com/caarlos0/env/v6"
 	"github.com/go-playground/validator/v10"
-	"github.com/speakeasy-api/rest-template-go/internal/core/config"
-	"github.com/speakeasy-api/rest-template-go/internal/core/errors"
-	"github.com/speakeasy-api/rest-template-go/internal/core/logging"
-	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
+	"os"
+
+	"github.com/superhorsy/quest-app-backend/internal/core/config"
+	"github.com/superhorsy/quest-app-backend/internal/core/errors"
+	"github.com/superhorsy/quest-app-backend/internal/core/logging"
+	"go.uber.org/zap"
 )
 
 const (

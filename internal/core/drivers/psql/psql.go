@@ -5,7 +5,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // imports the postgres driver
-	"github.com/speakeasy-api/rest-template-go/internal/core/errors"
+	"github.com/superhorsy/quest-app-backend/internal/core/errors"
 )
 
 const (
@@ -26,7 +26,7 @@ type Driver struct {
 	db  *sqlx.DB
 }
 
-// New instantiates a instance of the Driver.
+// New instantiates an instance of the Driver.
 func New(cfg Config) *Driver {
 	return &Driver{
 		cfg: cfg,

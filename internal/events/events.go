@@ -9,7 +9,8 @@ type Topic string
 
 const (
 	// TopicUsers represents a topic for user entity events such as CRUD events.
-	TopicUsers Topic = "users"
+	TopicUsers  Topic = "users"
+	TopicQuests Topic = "quests"
 )
 
 // Events represents an implementation that can produce events.

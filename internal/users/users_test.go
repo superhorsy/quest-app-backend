@@ -7,13 +7,13 @@ import (
 
 	"github.com/AlekSi/pointer"
 	"github.com/golang/mock/gomock"
-	"github.com/speakeasy-api/rest-template-go/internal/core/errors"
-	"github.com/speakeasy-api/rest-template-go/internal/events"
-	"github.com/speakeasy-api/rest-template-go/internal/users"
-	"github.com/speakeasy-api/rest-template-go/internal/users/mocks"
-	"github.com/speakeasy-api/rest-template-go/internal/users/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/superhorsy/quest-app-backend/internal/core/errors"
+	"github.com/superhorsy/quest-app-backend/internal/events"
+	"github.com/superhorsy/quest-app-backend/internal/users"
+	"github.com/superhorsy/quest-app-backend/internal/users/mocks"
+	"github.com/superhorsy/quest-app-backend/internal/users/model"
 )
 
 func TestNew_Success(t *testing.T) {

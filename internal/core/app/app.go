@@ -8,8 +8,8 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/speakeasy-api/rest-template-go/internal/core/logging"
-	"github.com/speakeasy-api/rest-template-go/internal/core/tracing"
+	"github.com/superhorsy/quest-app-backend/internal/core/logging"
+	"github.com/superhorsy/quest-app-backend/internal/core/tracing"
 	"go.uber.org/zap"
 )
 
@@ -35,7 +35,7 @@ func Start(onStart OnStart) {
 	ctx := context.Background()
 
 	a := &App{
-		Name: "test-app", // TODO determine how to configure this
+		Name: "quest-app", // TODO determine how to configure this
 	}
 	a.OnShutdown(func() {
 		if err := logging.Sync(ctx); err != nil {

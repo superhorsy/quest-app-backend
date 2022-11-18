@@ -2,17 +2,19 @@ package main
 
 import (
 	"context"
-
 	"github.com/cenkalti/backoff/v4"
-	"github.com/speakeasy-api/rest-template-go/internal/config"
-	"github.com/speakeasy-api/rest-template-go/internal/core/app"
-	"github.com/speakeasy-api/rest-template-go/internal/core/drivers/psql"
-	"github.com/speakeasy-api/rest-template-go/internal/core/listeners/http"
-	"github.com/speakeasy-api/rest-template-go/internal/core/logging"
-	"github.com/speakeasy-api/rest-template-go/internal/events"
-	httptransport "github.com/speakeasy-api/rest-template-go/internal/transport/http"
-	"github.com/speakeasy-api/rest-template-go/internal/users"
-	"github.com/speakeasy-api/rest-template-go/internal/users/store"
+	"github.com/superhorsy/quest-app-backend/internal/quests"
+
+	"github.com/superhorsy/quest-app-backend/internal/config"
+	"github.com/superhorsy/quest-app-backend/internal/core/app"
+	"github.com/superhorsy/quest-app-backend/internal/core/drivers/psql"
+	"github.com/superhorsy/quest-app-backend/internal/core/listeners/http"
+	"github.com/superhorsy/quest-app-backend/internal/core/logging"
+	"github.com/superhorsy/quest-app-backend/internal/events"
+	questStore "github.com/superhorsy/quest-app-backend/internal/quests/store"
+	httptransport "github.com/superhorsy/quest-app-backend/internal/transport/http"
+	"github.com/superhorsy/quest-app-backend/internal/users"
+	userStore "github.com/superhorsy/quest-app-backend/internal/users/store"
 	"go.uber.org/zap"
 )
 
@@ -42,16 +44,19 @@ func appStart(ctx context.Context, a *app.App) ([]app.Listener, error) {
 		if err := db.RevertMigrations(ctx, "file://migrations"); err != nil {
 			logging.From(ctx).Error("failed to revert migrations", zap.Error(err))
 		}
+
 	})
 
 	// Instantiate and connect all our classes
-	us := store.New(db.GetDB())
+	us := userStore.New(db.GetDB())
+	qs := questStore.New(db.GetDB())
 	e := events.New()
 	u := users.New(us, e)
+	q := quests.New(qs, e)
 
-	httpServer := httptransport.New(u, db.GetDB())
+	httpServer := httptransport.New(u, q, db.GetDB())
 
-	// Create a HTTP server
+	// Create an HTTP server
 	h, err := http.New(httpServer, cfg.HTTP)
 	if err != nil {
 		return nil, err

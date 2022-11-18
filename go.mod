@@ -1,4 +1,4 @@
-module github.com/speakeasy-api/rest-template-go
+module github.com/superhorsy/quest-app-backend
 
 go 1.18
 

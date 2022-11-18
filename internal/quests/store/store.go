@@ -9,7 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/superhorsy/quest-app-backend/internal/core/errors"
-	"github.com/superhorsy/quest-app-backend/internal/users/model"
+	"github.com/superhorsy/quest-app-backend/internal/quests/model"
 )
 
 const (
@@ -65,16 +65,16 @@ func New(db DB) *Store {
 	}
 }
 
-// InsertUser will add a new unique user to the database using the provided data.
-func (s *Store) InsertUser(ctx context.Context, u *model.User) (*model.User, error) {
-	u.CreatedAt = timeNow()
-	u.UpdatedAt = u.CreatedAt
+// InsertQuest will add a new quest to the database using the provided data.
+func (s *Store) InsertQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error) {
+	quest.CreatedAt = timeNow()
+	quest.UpdatedAt = quest.CreatedAt
 
 	res, err := s.db.NamedQueryContext(ctx,
 		`INSERT INTO 
-		users(first_name, last_name, nickname, password, email, country, created_at, updated_at) 
-		VALUES (:first_name, :last_name, :nickname, :password, :email, :country, :created_at, :updated_at) 
-		RETURNING *`, u)
+		quests("name","owner",created_at,updated_at) 
+		VALUES (:name,:owner,:created_at, :updated_at) 
+		RETURNING *`, quest)
 	if err = checkWriteError(err); err != nil {
 		return nil, err
 	}
@@ -84,111 +84,13 @@ func (s *Store) InsertUser(ctx context.Context, u *model.User) (*model.User, err
 		return nil, errors.ErrUnknown
 	}
 
-	createdUser := &model.User{}
+	createdUser := &model.Quest{}
 
 	if err := res.StructScan(&createdUser); err != nil {
 		return nil, errors.ErrUnknown.Wrap(err)
 	}
 
 	return createdUser, nil
-}
-
-// GetUser will retrieve an existing user via their ID.
-func (s *Store) GetUser(ctx context.Context, id string) (*model.User, error) {
-	var u model.User
-
-	if err := s.db.GetContext(ctx, &u, "SELECT * FROM users WHERE id = $1", id); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.ErrNotFound.Wrap(err)
-		}
-		var pqErr *pq.Error
-		if errors.As(err, &pqErr) {
-			if pqErr.Code.Name() == pqErrInvalidTextRepresentation && strings.Contains(pqErr.Error(), "uuid") {
-				return nil, ErrInvalidID.Wrap(errors.ErrValidation.Wrap(err))
-			}
-		}
-
-		return nil, errors.ErrUnknown.Wrap(err)
-	}
-
-	return &u, nil
-}
-
-// GetUserByEmail will retrieve an existing user via their email address.
-func (s *Store) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
-	var u model.User
-
-	if err := s.db.GetContext(ctx, &u, "SELECT * FROM users WHERE email = $1", email); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.ErrNotFound.Wrap(err)
-		}
-
-		return nil, errors.ErrUnknown.Wrap(err)
-	}
-
-	return &u, nil
-}
-
-// UpdateUser will update an existing user in the database using only the present data provided.
-func (s *Store) UpdateUser(ctx context.Context, u *model.User) (*model.User, error) {
-	if u.ID == nil || *u.ID == "" {
-		return nil, ErrInvalidID.Wrap(errors.ErrValidation)
-	}
-
-	u.UpdatedAt = timeNow()
-
-	res, err := s.db.NamedQueryContext(ctx,
-		`UPDATE users 
-		SET 
-		first_name = COALESCE(:first_name, first_name), 
-		last_name = COALESCE(:last_name, last_name), 
-		nickname = COALESCE(:nickname, nickname), 
-		password = COALESCE(:password, password),
-		email = COALESCE(:email, email),
-		country = COALESCE(:country, country),
-		updated_at = :updated_at 
-		WHERE id = :id
-		RETURNING *`, u)
-	if err = checkWriteError(err); err != nil {
-		return nil, err
-	}
-	defer res.Close()
-
-	if !res.Next() {
-		return nil, ErrUserNotUpdated.Wrap(errors.ErrNotFound)
-	}
-
-	updatedUser := &model.User{}
-
-	if err := res.StructScan(&updatedUser); err != nil {
-		return nil, errors.ErrUnknown.Wrap(err)
-	}
-
-	return updatedUser, nil
-}
-
-// DeleteUser will delete an existing user via their ID.
-func (s *Store) DeleteUser(ctx context.Context, id string) error {
-	res, err := s.db.ExecContext(ctx, "DELETE FROM users WHERE id = $1", id)
-	if err != nil {
-		var pqErr *pq.Error
-		if errors.As(err, &pqErr) {
-			if pqErr.Code.Name() == pqErrInvalidTextRepresentation && strings.Contains(pqErr.Error(), "uuid") {
-				return ErrInvalidID.Wrap(errors.ErrValidation.Wrap(err))
-			}
-		}
-
-		return errors.ErrUnknown.Wrap(err)
-	}
-	rows, err := res.RowsAffected()
-	if err != nil {
-		return errors.ErrUnknown.Wrap(err)
-	}
-	if rows != 1 {
-		return ErrUserNotDeleted.Wrap(errors.ErrNotFound)
-	}
-
-	return nil
 }
 
 //nolint:cyclop

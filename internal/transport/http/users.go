@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/speakeasy-api/rest-template-go/internal/core/errors"
-	"github.com/speakeasy-api/rest-template-go/internal/core/logging"
-	"github.com/speakeasy-api/rest-template-go/internal/users/model"
+	"github.com/superhorsy/quest-app-backend/internal/core/errors"
+	"github.com/superhorsy/quest-app-backend/internal/core/logging"
+	"github.com/superhorsy/quest-app-backend/internal/users/model"
 	"go.uber.org/zap"
 )
 

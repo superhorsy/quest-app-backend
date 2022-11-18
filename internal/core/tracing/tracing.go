@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/speakeasy-api/rest-template-go/internal/core/logging"
+	"github.com/superhorsy/quest-app-backend/internal/core/logging"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/sdk/resource"
