@@ -65,15 +65,14 @@ func New(db DB) *Store {
 	}
 }
 
-// InsertQuest will add a new quest to the database using the provided data.
-func (s *Store) InsertQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error) {
+func (s *Store) saveQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error) {
 	quest.CreatedAt = timeNow()
 	quest.UpdatedAt = quest.CreatedAt
 
 	res, err := s.db.NamedQueryContext(ctx,
 		`INSERT INTO 
-		quests("name","owner",created_at,updated_at) 
-		VALUES (:name,:owner,:created_at, :updated_at) 
+		quests("name",description,"owner",created_at,updated_at) 
+		VALUES (:name,:description,:owner,:created_at, :updated_at) 
 		RETURNING *`, quest)
 	if err = checkWriteError(err); err != nil {
 		return nil, err
@@ -84,13 +83,77 @@ func (s *Store) InsertQuest(ctx context.Context, quest *model.Quest) (*model.Que
 		return nil, errors.ErrUnknown
 	}
 
-	createdUser := &model.Quest{}
+	createdQuest := &model.Quest{}
 
-	if err := res.StructScan(&createdUser); err != nil {
+	if err := res.StructScan(&createdQuest); err != nil {
 		return nil, errors.ErrUnknown.Wrap(err)
 	}
+	return createdQuest, nil
+}
 
-	return createdUser, nil
+func (s *Store) updateSteps(ctx context.Context, createdQuest *model.Quest, steps []model.Step) (*model.Quest, error) {
+	for i, _ := range steps {
+		steps[i].QuestId = createdQuest.ID
+		steps[i].CreatedAt = createdQuest.CreatedAt
+		steps[i].UpdatedAt = createdQuest.CreatedAt
+	}
+
+	res, err := s.db.NamedQueryContext(ctx, `INSERT INTO
+			steps(quest_id, sort,description,question_type,question_content,answer_type,answer_content,created_at,updated_at)
+			VALUES (:quest_id, :sort,:description,:question_type,:question_content,:answer_type,:answer_content,:created_at,:updated_at)
+			RETURNING *`, steps)
+
+	if err = checkWriteError(err); err != nil {
+		return nil, err
+	}
+
+	createdQuest.Steps = []model.Step{}
+	var step model.Step
+	for res.Next() {
+		if err := res.StructScan(&step); err != nil {
+			return nil, errors.ErrUnknown.Wrap(err)
+		}
+		createdQuest.Steps = append(createdQuest.Steps, step)
+	}
+
+	defer res.Close()
+	return createdQuest, nil
+}
+
+func (s *Store) updateEmails(ctx context.Context, quest *model.Quest, emails *[]model.Email) error {
+	for _, email := range *emails {
+		arg := map[string]interface{}{
+			"quest_id": quest.ID,
+			"email":    email,
+		}
+		res, err := s.db.NamedQueryContext(ctx, `INSERT INTO quest_to_email(quest_id, email) VALUES (:quest_id, :email)`, arg)
+		if err = checkWriteError(err); err != nil {
+			return err
+		}
+		defer res.Close()
+	}
+	return nil
+}
+
+// InsertQuest will add a new quest to the database using the provided data.
+func (s *Store) InsertQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error) {
+	createdQuest, err := s.saveQuest(ctx, quest)
+	if err != nil {
+		return nil, err
+	}
+
+	createdQuest, err = s.updateSteps(ctx, createdQuest, quest.Steps)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.updateEmails(ctx, createdQuest, quest.Emails)
+	if err != nil {
+		return nil, err
+	}
+	createdQuest.Emails = quest.Emails
+
+	return createdQuest, nil
 }
 
 //nolint:cyclop
