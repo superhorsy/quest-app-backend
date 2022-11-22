@@ -22,10 +22,8 @@ type deletedUserResponse struct {
 	Success bool `json:"success"`
 }
 
-func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
+func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
-	w.Header().Add("Content-Type", "application/json") // TODO might do this in application specific middleware instead
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -34,7 +32,36 @@ func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u := model.User{}
+	u := model.UserWithPass{}
+
+	if err := json.Unmarshal(data, &u); err != nil {
+		logging.From(ctx).Error("failed to unmarshal json body", zap.Error(err))
+		handleError(ctx, w, errors.ErrInvalidRequest.Wrap(err))
+		return
+	}
+
+	createdUser, err := s.users.CreateUser(ctx, &u)
+	if err != nil {
+		// TODO deal with different error types that affect the error response from the generic types
+		logging.From(ctx).Error("failed to create user", zap.Error(err))
+		handleError(ctx, w, err)
+		return
+	}
+
+	handleResponse(ctx, w, createdUser)
+}
+
+func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		logging.From(ctx).Error("failed to read request body", zap.Error(err))
+		handleError(ctx, w, errors.ErrUnknown.Wrap(err))
+		return
+	}
+
+	u := model.UserWithPass{}
 
 	if err := json.Unmarshal(data, &u); err != nil {
 		logging.From(ctx).Error("failed to unmarshal json body", zap.Error(err))
@@ -56,8 +83,6 @@ func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	w.Header().Add("Content-Type", "application/json") // TODO might do this in application specific middleware instead
-
 	vars := mux.Vars(r)
 	id := vars["id"]
 
@@ -73,8 +98,6 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) searchUsers(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
-	w.Header().Add("Content-Type", "application/json") // TODO might do this in application specific middleware instead
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -104,8 +127,6 @@ func (s *Server) searchUsers(w http.ResponseWriter, r *http.Request) {
 func (s *Server) updateUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	w.Header().Add("Content-Type", "application/json")
-
 	vars := mux.Vars(r)
 	id := vars["id"]
 
@@ -116,7 +137,7 @@ func (s *Server) updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u := model.User{}
+	u := model.UserWithPass{}
 
 	if err := json.Unmarshal(data, &u); err != nil {
 		logging.From(ctx).Error("failed to unmarshal json body", zap.Error(err))
@@ -138,8 +159,6 @@ func (s *Server) updateUser(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
-	w.Header().Add("Content-Type", "application/json")
 
 	vars := mux.Vars(r)
 	id := vars["id"]

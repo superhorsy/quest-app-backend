@@ -20,8 +20,8 @@ func (s *Store) FindUsers(ctx context.Context, filters []model.Filter, offset, l
 		return nil, ErrInvalidFilters.Wrap(errors.ErrInvalidRequest)
 	}
 
-	whereClauses := []string{}
-	values := []interface{}{}
+	var whereClauses []string
+	var values []interface{}
 
 	for i, f := range filters {
 		whereClauses = append(whereClauses, fmt.Sprintf("%s %s $%d", f.Field, f.MatchType, i+1))
@@ -47,7 +47,7 @@ func (s *Store) FindUsers(ctx context.Context, filters []model.Filter, offset, l
 	}
 	defer rows.Close()
 
-	users := []*model.User{}
+	var users []*model.User
 
 	for rows.Next() {
 		var u model.User

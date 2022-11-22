@@ -28,18 +28,18 @@ const (
 
 func TestServer_CreateUser_Success(t *testing.T) {
 	type args struct {
-		user model.User
+		user model.UserWithPass
 	}
 	tests := []struct {
 		name     string
 		args     args
-		wantUser model.User
+		wantUser model.UserWithPass
 		wantCode int
 	}{
 		{
 			name: "success",
 			args: args{
-				user: model.User{
+				user: model.UserWithPass{
 					FirstName: pointer.ToString("testFirst"),
 					LastName:  pointer.ToString("testLast"),
 					Nickname:  pointer.ToString("test"),
@@ -48,7 +48,7 @@ func TestServer_CreateUser_Success(t *testing.T) {
 					Country:   pointer.ToString("UK"),
 				},
 			},
-			wantUser: model.User{
+			wantUser: model.UserWithPass{
 				ID:        pointer.ToString("some-test-id"),
 				FirstName: pointer.ToString("testFirst"),
 				LastName:  pointer.ToString("testLast"),
@@ -94,7 +94,7 @@ func TestServer_CreateUser_Success(t *testing.T) {
 			assert.Equal(t, tt.wantCode, w.Code)
 
 			var res struct {
-				Data model.User `json:"data"`
+				Data model.UserWithPass `json:"data"`
 			}
 
 			err = json.Unmarshal(w.Body.Bytes(), &res)
@@ -106,7 +106,7 @@ func TestServer_CreateUser_Success(t *testing.T) {
 
 func TestServer_CreateUser_Error(t *testing.T) {
 	type args struct {
-		user model.User
+		user model.UserWithPass
 	}
 	tests := []struct {
 		name     string
@@ -117,7 +117,7 @@ func TestServer_CreateUser_Error(t *testing.T) {
 		{
 			name: "fails",
 			args: args{
-				user: model.User{
+				user: model.UserWithPass{
 					FirstName: pointer.ToString("testFirst"),
 					LastName:  pointer.ToString("testLast"),
 					Nickname:  pointer.ToString("test"),
@@ -179,7 +179,7 @@ func TestServer_GetUser_Success(t *testing.T) {
 	tests := []struct {
 		name     string
 		args     args
-		wantUser model.User
+		wantUser model.UserWithPass
 		wantCode int
 	}{
 		{
@@ -187,7 +187,7 @@ func TestServer_GetUser_Success(t *testing.T) {
 			args: args{
 				id: "some-test-id",
 			},
-			wantUser: model.User{
+			wantUser: model.UserWithPass{
 				ID:        pointer.ToString("some-test-id"),
 				FirstName: pointer.ToString("testFirst"),
 				LastName:  pointer.ToString("testLast"),
@@ -229,7 +229,7 @@ func TestServer_GetUser_Success(t *testing.T) {
 			assert.Equal(t, tt.wantCode, w.Code)
 
 			var res struct {
-				Data model.User `json:"data"`
+				Data model.UserWithPass `json:"data"`
 			}
 
 			err = json.Unmarshal(w.Body.Bytes(), &res)
@@ -305,7 +305,7 @@ func TestServer_SearchUsers_Success(t *testing.T) {
 	tests := []struct {
 		name      string
 		args      args
-		wantUsers []*model.User
+		wantUsers []*model.UserWithPass
 		wantCode  int
 	}{
 		{
@@ -319,7 +319,7 @@ func TestServer_SearchUsers_Success(t *testing.T) {
 					},
 				},
 			},
-			wantUsers: []*model.User{
+			wantUsers: []*model.UserWithPass{
 				{
 					ID:        pointer.ToString("some-test-id"),
 					FirstName: pointer.ToString("testFirst"),
@@ -367,7 +367,7 @@ func TestServer_SearchUsers_Success(t *testing.T) {
 			assert.Equal(t, tt.wantCode, w.Code)
 
 			var res struct {
-				Data []*model.User `json:"data"`
+				Data []*model.UserWithPass `json:"data"`
 			}
 
 			err = json.Unmarshal(w.Body.Bytes(), &res)
@@ -448,18 +448,18 @@ func TestServer_SearchUsers_Error(t *testing.T) {
 
 func TestServer_UpdateUser_Success(t *testing.T) {
 	type args struct {
-		user model.User
+		user model.UserWithPass
 	}
 	tests := []struct {
 		name     string
 		args     args
-		wantUser *model.User
+		wantUser *model.UserWithPass
 		wantCode int
 	}{
 		{
 			name: "success",
 			args: args{
-				user: model.User{
+				user: model.UserWithPass{
 					ID:        pointer.ToString("some-test-id"),
 					FirstName: pointer.ToString("testFirst"),
 					LastName:  pointer.ToString("testLast"),
@@ -469,7 +469,7 @@ func TestServer_UpdateUser_Success(t *testing.T) {
 					Country:   pointer.ToString("UK"),
 				},
 			},
-			wantUser: &model.User{
+			wantUser: &model.UserWithPass{
 				ID:        pointer.ToString("some-test-id"),
 				FirstName: pointer.ToString("testFirst"),
 				LastName:  pointer.ToString("testLast"),
@@ -515,7 +515,7 @@ func TestServer_UpdateUser_Success(t *testing.T) {
 			assert.Equal(t, tt.wantCode, w.Code)
 
 			var res struct {
-				Data *model.User `json:"data"`
+				Data *model.UserWithPass `json:"data"`
 			}
 
 			err = json.Unmarshal(w.Body.Bytes(), &res)
@@ -527,7 +527,7 @@ func TestServer_UpdateUser_Success(t *testing.T) {
 
 func TestServer_UpdateUser_Error(t *testing.T) {
 	type args struct {
-		user model.User
+		user model.UserWithPass
 	}
 	tests := []struct {
 		name     string
@@ -538,7 +538,7 @@ func TestServer_UpdateUser_Error(t *testing.T) {
 		{
 			name: "fails",
 			args: args{
-				user: model.User{
+				user: model.UserWithPass{
 					ID:        pointer.ToString("some-test-id"),
 					FirstName: pointer.ToString("testFirst"),
 					LastName:  pointer.ToString("testLast"),

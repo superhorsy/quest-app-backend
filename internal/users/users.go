@@ -4,6 +4,7 @@ package users
 
 import (
 	"context"
+	"github.com/superhorsy/quest-app-backend/internal/core/helpers"
 
 	"github.com/superhorsy/quest-app-backend/internal/core/errors"
 	"github.com/superhorsy/quest-app-backend/internal/core/logging"
@@ -23,8 +24,8 @@ const (
 
 // Store represents a type for storing a user in a database.
 type Store interface {
-	InsertUser(ctx context.Context, user *model.User) (*model.User, error)
-	UpdateUser(ctx context.Context, user *model.User) (*model.User, error)
+	InsertUser(ctx context.Context, user *model.UserWithPass) (*model.User, error)
+	UpdateUser(ctx context.Context, user *model.UserWithPass) (*model.User, error)
 	GetUser(ctx context.Context, id string) (*model.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*model.User, error)
 	FindUsers(ctx context.Context, filters []model.Filter, offset, limit int64) ([]*model.User, error)
@@ -51,7 +52,10 @@ func New(s Store, e Events) *Users {
 }
 
 // CreateUser will try to create a user in our database with the provided data if it represents a unique new user.
-func (u *Users) CreateUser(ctx context.Context, user *model.User) (*model.User, error) {
+func (u *Users) CreateUser(ctx context.Context, user *model.UserWithPass) (*model.User, error) {
+	passwordHash := helpers.HashAndSalt([]byte(*user.Password))
+	user.Password = &passwordHash
+
 	// Not much validation needed before storing in the database as the database itself is handling most of that (postgres)
 	// if we were to use something else you would probably want to add validation of inputs here
 	createdUser, err := u.store.InsertUser(ctx, user)
@@ -84,7 +88,7 @@ func (u *Users) GetUser(ctx context.Context, id string) (*model.User, error) {
 	return user, nil
 }
 
-// FindUsers will retrieve a list of users based on matching all of the the provided filters and using pagination if limit is gt 0.
+// FindUsers will retrieve a list of users based on matching all the provided filters and using pagination if limit is gt 0.
 func (u *Users) FindUsers(ctx context.Context, filters []model.Filter, offset, limit int64) ([]*model.User, error) {
 	// Validate filters before searching with them
 	// TODO may want to return details of error instead of just logging
@@ -123,7 +127,7 @@ func (u *Users) FindUsers(ctx context.Context, filters []model.Filter, offset, l
 }
 
 // UpdateUser will try to update an existing user in our database with the provided data.
-func (u *Users) UpdateUser(ctx context.Context, user *model.User) (*model.User, error) {
+func (u *Users) UpdateUser(ctx context.Context, user *model.UserWithPass) (*model.User, error) {
 	updatedUser, err := u.store.UpdateUser(ctx, user)
 	if err != nil {
 		return nil, err

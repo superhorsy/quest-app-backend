@@ -8,16 +8,17 @@ import (
 	questModel "github.com/superhorsy/quest-app-backend/internal/quests/model"
 	"net/http"
 
+	"github.com/goji/httpauth"
 	"github.com/gorilla/mux"
 	"github.com/superhorsy/quest-app-backend/internal/users/model"
 )
 
 // Users represents a type that can provide CRUD operations on users.
 type Users interface {
-	CreateUser(ctx context.Context, user *model.User) (*model.User, error)
+	CreateUser(ctx context.Context, user *model.UserWithPass) (*model.User, error)
 	GetUser(ctx context.Context, id string) (*model.User, error)
 	FindUsers(ctx context.Context, filters []model.Filter, offset, limit int64) ([]*model.User, error)
-	UpdateUser(ctx context.Context, user *model.User) (*model.User, error)
+	UpdateUser(ctx context.Context, user *model.UserWithPass) (*model.User, error)
 	DeleteUser(ctx context.Context, id string) error
 }
 
@@ -54,7 +55,14 @@ func (s *Server) AddRoutes(r *mux.Router) error {
 
 	r = r.PathPrefix("/v1").Subrouter()
 
-	//r.HandleFunc("/login", s.createUser).Methods(http.MethodPost)
+	authHandler := httpauth.SimpleBasicAuth("test", "test")
+
+	r.HandleFunc("/login", s.login).Methods(http.MethodPost)
+
+	r.Use(authHandler)
+	r.Use(EnforceJSONHandler)
+	r.Use(JsonResponse)
+
 	r.HandleFunc("/quests", s.getQuestsByUser).Methods(http.MethodGet)
 	r.HandleFunc("/quests", s.createQuest).Methods(http.MethodPost)
 

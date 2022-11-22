@@ -15,8 +15,6 @@ import (
 func (s *Server) createQuest(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	w.Header().Add("Content-Type", "application/json") // TODO might do this in application specific middleware instead
-
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		logging.From(ctx).Error("failed to read request body", zap.Error(err))

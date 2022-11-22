@@ -21,7 +21,7 @@ func TestStore_FindUsers_Success(t *testing.T) {
 	domains := []string{"gmail.com", "hotmail.com", "yahoo.com"}
 
 	for i := 0; i < 100; i++ {
-		u := &model.User{
+		u := &model.UserWithPass{
 			FirstName: pointer.ToString(fmt.Sprintf("%s%d", firstNames[i%len(firstNames)], i)),
 			LastName:  pointer.ToString(fmt.Sprintf("%s%d", lastNames[i%len(lastNames)], i)),
 			Nickname:  pointer.ToString(fmt.Sprintf("%s%d", nicknames[i%len(nicknames)], i)),

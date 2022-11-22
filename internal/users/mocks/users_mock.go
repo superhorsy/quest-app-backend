@@ -51,10 +51,10 @@ func (mr *MockStoreMockRecorder) DeleteUser(arg0, arg1 interface{}) *gomock.Call
 }
 
 // FindUsers mocks base method.
-func (m *MockStore) FindUsers(arg0 context.Context, arg1 []model.Filter, arg2, arg3 int64) ([]*model.User, error) {
+func (m *MockStore) FindUsers(arg0 context.Context, arg1 []model.Filter, arg2, arg3 int64) ([]*model.UserWithPass, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindUsers", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].([]*model.User)
+	ret0, _ := ret[0].([]*model.UserWithPass)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -66,10 +66,10 @@ func (mr *MockStoreMockRecorder) FindUsers(arg0, arg1, arg2, arg3 interface{}) *
 }
 
 // GetUser mocks base method.
-func (m *MockStore) GetUser(arg0 context.Context, arg1 string) (*model.User, error) {
+func (m *MockStore) GetUser(arg0 context.Context, arg1 string) (*model.UserWithPass, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUser", arg0, arg1)
-	ret0, _ := ret[0].(*model.User)
+	ret0, _ := ret[0].(*model.UserWithPass)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -81,10 +81,10 @@ func (mr *MockStoreMockRecorder) GetUser(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // GetUserByEmail mocks base method.
-func (m *MockStore) GetUserByEmail(arg0 context.Context, arg1 string) (*model.User, error) {
+func (m *MockStore) GetUserByEmail(arg0 context.Context, arg1 string) (*model.UserWithPass, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserByEmail", arg0, arg1)
-	ret0, _ := ret[0].(*model.User)
+	ret0, _ := ret[0].(*model.UserWithPass)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -96,10 +96,10 @@ func (mr *MockStoreMockRecorder) GetUserByEmail(arg0, arg1 interface{}) *gomock.
 }
 
 // InsertUser mocks base method.
-func (m *MockStore) InsertUser(arg0 context.Context, arg1 *model.User) (*model.User, error) {
+func (m *MockStore) InsertUser(arg0 context.Context, arg1 *model.UserWithPass) (*model.UserWithPass, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InsertUser", arg0, arg1)
-	ret0, _ := ret[0].(*model.User)
+	ret0, _ := ret[0].(*model.UserWithPass)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -111,10 +111,10 @@ func (mr *MockStoreMockRecorder) InsertUser(arg0, arg1 interface{}) *gomock.Call
 }
 
 // UpdateUser mocks base method.
-func (m *MockStore) UpdateUser(arg0 context.Context, arg1 *model.User) (*model.User, error) {
+func (m *MockStore) UpdateUser(arg0 context.Context, arg1 *model.UserWithPass) (*model.UserWithPass, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateUser", arg0, arg1)
-	ret0, _ := ret[0].(*model.User)
+	ret0, _ := ret[0].(*model.UserWithPass)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

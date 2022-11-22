@@ -29,17 +29,17 @@ func TestNew_Success(t *testing.T) {
 
 func TestUsers_CreateUser_Success(t *testing.T) {
 	type args struct {
-		user *model.User
+		user *model.UserWithPass
 	}
 	tests := []struct {
 		name     string
 		args     args
-		wantUser *model.User
+		wantUser *model.UserWithPass
 	}{
 		{
 			name: "success",
 			args: args{
-				user: &model.User{
+				user: &model.UserWithPass{
 					FirstName: pointer.ToString("testFirst"),
 					LastName:  pointer.ToString("testLast"),
 					Nickname:  pointer.ToString("test"),
@@ -48,7 +48,7 @@ func TestUsers_CreateUser_Success(t *testing.T) {
 					Country:   pointer.ToString("UK"),
 				},
 			},
-			wantUser: &model.User{
+			wantUser: &model.UserWithPass{
 				ID:        pointer.ToString("some-test-id"),
 				FirstName: pointer.ToString("testFirst"),
 				LastName:  pointer.ToString("testLast"),
@@ -90,7 +90,7 @@ func TestUsers_CreateUser_Success(t *testing.T) {
 
 func TestUsers_CreateUser_Error(t *testing.T) {
 	type args struct {
-		user *model.User
+		user *model.UserWithPass
 	}
 	tests := []struct {
 		name    string
@@ -100,7 +100,7 @@ func TestUsers_CreateUser_Error(t *testing.T) {
 		{
 			name: "fails",
 			args: args{
-				user: &model.User{
+				user: &model.UserWithPass{
 					FirstName: pointer.ToString("testFirst"),
 					LastName:  pointer.ToString("testLast"),
 					Nickname:  pointer.ToString("test"),
@@ -141,12 +141,12 @@ func TestUsers_GetUser_Success(t *testing.T) {
 	tests := []struct {
 		name     string
 		args     args
-		wantUser *model.User
+		wantUser *model.UserWithPass
 	}{
 		{
 			name: "success",
 			args: args{},
-			wantUser: &model.User{
+			wantUser: &model.UserWithPass{
 				ID:        pointer.ToString("some-test-id"),
 				FirstName: pointer.ToString("testFirst"),
 				LastName:  pointer.ToString("testLast"),
@@ -229,7 +229,7 @@ func TestUsers_FindUsers_Success(t *testing.T) {
 	tests := []struct {
 		name      string
 		args      args
-		wantUsers []*model.User
+		wantUsers []*model.UserWithPass
 	}{
 		{
 			name: "success",
@@ -244,7 +244,7 @@ func TestUsers_FindUsers_Success(t *testing.T) {
 				offset: 0,
 				limit:  10,
 			},
-			wantUsers: []*model.User{
+			wantUsers: []*model.UserWithPass{
 				{
 					ID:        pointer.ToString("some-test-id"),
 					FirstName: pointer.ToString("testFirst"),
@@ -392,17 +392,17 @@ func TestUsers_FindUsers_Error(t *testing.T) {
 
 func TestUsers_UpdateUser_Success(t *testing.T) {
 	type args struct {
-		user *model.User
+		user *model.UserWithPass
 	}
 	tests := []struct {
 		name     string
 		args     args
-		wantUser *model.User
+		wantUser *model.UserWithPass
 	}{
 		{
 			name: "success",
 			args: args{
-				user: &model.User{
+				user: &model.UserWithPass{
 					ID:        pointer.ToString("some-test-id"),
 					FirstName: pointer.ToString("testFirst"),
 					LastName:  pointer.ToString("testLast"),
@@ -412,7 +412,7 @@ func TestUsers_UpdateUser_Success(t *testing.T) {
 					Country:   pointer.ToString("UK"),
 				},
 			},
-			wantUser: &model.User{
+			wantUser: &model.UserWithPass{
 				ID:        pointer.ToString("some-test-id"),
 				FirstName: pointer.ToString("testFirst"),
 				LastName:  pointer.ToString("testLast"),
@@ -454,7 +454,7 @@ func TestUsers_UpdateUser_Success(t *testing.T) {
 
 func TestUsers_UpdateUser_Error(t *testing.T) {
 	type args struct {
-		user *model.User
+		user *model.UserWithPass
 	}
 	tests := []struct {
 		name    string
@@ -464,7 +464,7 @@ func TestUsers_UpdateUser_Error(t *testing.T) {
 		{
 			name: "fails",
 			args: args{
-				user: &model.User{
+				user: &model.UserWithPass{
 					ID:        pointer.ToString("some-test-id"),
 					FirstName: pointer.ToString("testFirst"),
 					LastName:  pointer.ToString("testLast"),

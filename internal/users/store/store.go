@@ -66,7 +66,7 @@ func New(db DB) *Store {
 }
 
 // InsertUser will add a new unique user to the database using the provided data.
-func (s *Store) InsertUser(ctx context.Context, u *model.User) (*model.User, error) {
+func (s *Store) InsertUser(ctx context.Context, u *model.UserWithPass) (*model.User, error) {
 	u.CreatedAt = timeNow()
 	u.UpdatedAt = u.CreatedAt
 
@@ -130,7 +130,7 @@ func (s *Store) GetUserByEmail(ctx context.Context, email string) (*model.User, 
 }
 
 // UpdateUser will update an existing user in the database using only the present data provided.
-func (s *Store) UpdateUser(ctx context.Context, u *model.User) (*model.User, error) {
+func (s *Store) UpdateUser(ctx context.Context, u *model.UserWithPass) (*model.User, error) {
 	if u.ID == nil || *u.ID == "" {
 		return nil, ErrInvalidID.Wrap(errors.ErrValidation)
 	}

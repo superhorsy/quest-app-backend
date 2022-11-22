@@ -2,13 +2,19 @@ package model
 
 import "time"
 
+// UserWithPass represents a person using our platform.
+type UserWithPass struct {
+	*User
+	Password *string `json:"password" db:"password"`
+}
+
 // User represents a person using our platform.
 type User struct {
 	ID        *string    `json:"id" db:"id"`
 	FirstName *string    `json:"first_name" db:"first_name"`
 	LastName  *string    `json:"last_name" db:"last_name"`
 	Nickname  *string    `json:"nickname" db:"nickname"`
-	Password  *string    `json:"password" db:"password"`
+	Password  *string    `json:"-" db:"password"`
 	Email     *string    `json:"email" db:"email"`
 	Country   *string    `json:"country" db:"country"`
 	CreatedAt *time.Time `json:"created_at" db:"created_at"`
