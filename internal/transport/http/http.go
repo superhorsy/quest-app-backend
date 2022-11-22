@@ -23,7 +23,8 @@ type Users interface {
 
 // Quests represents a type that can provide CRUD operations on quests.
 type Quests interface {
-	CreateQuest(ctx context.Context, user *questModel.Quest) (*questModel.Quest, error)
+	CreateQuest(ctx context.Context, quest *questModel.Quest) (*questModel.Quest, error)
+	GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]questModel.Quest, error)
 }
 
 // DB represents a type that can be used to interact with the database.
@@ -54,7 +55,8 @@ func (s *Server) AddRoutes(r *mux.Router) error {
 	r = r.PathPrefix("/v1").Subrouter()
 
 	//r.HandleFunc("/login", s.createUser).Methods(http.MethodPost)
-	r.HandleFunc("/quest", s.createQuest).Methods(http.MethodPost)
+	r.HandleFunc("/quests", s.getQuestsByUser).Methods(http.MethodGet)
+	r.HandleFunc("/quests", s.createQuest).Methods(http.MethodPost)
 
 	r.HandleFunc("/user", s.createUser).Methods(http.MethodPost)
 	r.HandleFunc("/user/{id}", s.getUser).Methods(http.MethodGet)

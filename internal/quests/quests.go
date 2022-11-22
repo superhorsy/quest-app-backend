@@ -2,7 +2,6 @@ package quests
 
 import (
 	"context"
-
 	"github.com/superhorsy/quest-app-backend/internal/events"
 	"github.com/superhorsy/quest-app-backend/internal/quests/model"
 )
@@ -10,6 +9,7 @@ import (
 // Store represents a type for storing a user in a database.
 type Store interface {
 	InsertQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error)
+	GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]model.Quest, error)
 }
 
 // Events represents a type for producing events on user CRUD operations.
@@ -42,4 +42,13 @@ func (q *Quests) CreateQuest(ctx context.Context, quest *model.Quest) (*model.Qu
 	})
 
 	return createdQuest, nil
+}
+
+func (q *Quests) GetQuestsByUser(ctx context.Context, ownerUuid string, offset int, limit int) ([]model.Quest, error) {
+	quests, err := q.store.GetQuestsByUser(ctx, ownerUuid, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return quests, nil
 }

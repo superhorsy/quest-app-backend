@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "d3f46f65-2354-42db-9ecb-b33b065bbe11",
+		"_postman_id": "8140b691-8e33-4516-8aa0-915c5299df6c",
 		"name": "Quest",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -352,7 +352,7 @@
 							"script": {
 								"exec": [
 									"var jsonData = JSON.parse(responseBody);\r",
-									"postman.setEnvironmentVariable(\"user_id\", jsonData.data.id);"
+									"postman.setEnvironmentVariable(\"quest_id\", jsonData.data.id);"
 								],
 								"type": "text/javascript"
 							}
@@ -363,7 +363,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"first_name\": \"Alice\",\r\n    \"last_name\": \"Bob\", \r\n    \"nickname\": \"AB123\",\r\n    \"password\": \"{{password}}\",\r\n    \"email\": \"alice@bob.com\",\r\n    \"country\": \"UK\"\r\n}\r\n",
+							"raw": "{\r\n    \"name\": \"Superquest\",\r\n    \"description\": \"Quset for my friend\", \r\n    \"owner\": \"{{user_id}}\",\r\n    \"steps\": [\r\n        {\r\n            \"sort\": 0, \r\n            \"description\": \"Step description\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"question_type\": \"text\",\r\n            \"answer_content\": [\r\n                \"tkrf\",\r\n                \"елка\"\r\n            ],\r\n            \"answer_type\": \"text\"\r\n        }\r\n    ],\r\n    \"emails\": [\"alice@bob.com\", \"alice1@bob.com\"]\r\n}\r\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -371,7 +371,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{scheme}}://{{host}}:{{port}}/v1/user",
+							"raw": "{{scheme}}://{{host}}:{{port}}/v1/quests",
 							"protocol": "{{scheme}}",
 							"host": [
 								"{{host}}"
@@ -379,7 +379,70 @@
 							"port": "{{port}}",
 							"path": [
 								"v1",
-								"user"
+								"quests"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GetQuests",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.variables.set(\"password\", CryptoJS.MD5(\"abcdef\").toString());"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);\r",
+									"postman.setEnvironmentVariable(\"user_id\", jsonData.data.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{scheme}}://{{host}}:{{port}}/v1/quests?uuid={{user_id}}&limit=2",
+							"protocol": "{{scheme}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"v1",
+								"quests"
+							],
+							"query": [
+								{
+									"key": "uuid",
+									"value": "{{user_id}}"
+								},
+								{
+									"key": "limit",
+									"value": "2"
+								}
 							]
 						}
 					},

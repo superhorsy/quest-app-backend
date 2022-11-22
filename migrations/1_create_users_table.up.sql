@@ -24,7 +24,6 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT id_unique UNIQUE (id),
-    CONSTRAINT nickname_unique UNIQUE (nickname),
     CONSTRAINT email_unique UNIQUE (email)
 );
 
@@ -39,8 +38,6 @@ CREATE INDEX idx_users_last_name ON users (last_name);
 CREATE INDEX trgm_idx_users_last_name ON users USING gin (last_name gin_trgm_ops);
 
 /* nickname index */
-CREATE UNIQUE INDEX idx_users_nickname ON users (nickname);
-
 CREATE INDEX trgm_idx_users_nickname ON users USING gin (nickname gin_trgm_ops);
 
 /* email index */

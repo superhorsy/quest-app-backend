@@ -3,6 +3,9 @@ package store
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"github.com/superhorsy/quest-app-backend/internal/core/logging"
+	"go.uber.org/zap"
 	"strings"
 	"time"
 
@@ -27,16 +30,6 @@ const (
 	ErrEmptyCountry = errors.Error("empty_country: password is empty")
 	// ErrInvalidID si returned when the ID is not a valid UUID or is empty.
 	ErrInvalidID = errors.Error("invalid_id: id is invalid")
-	// ErrUserNotUpdated is returned when a record can't be found to update.
-	ErrUserNotUpdated = errors.Error("user_not_updated: user record wasn't updated")
-	// ErrUserNotDeleted is returned when a record can't be found to delete.
-	ErrUserNotDeleted = errors.Error("user_not_deleted: user record wasn't deleted")
-	// ErrInvalidFilters is returned when the filters for finding a user are not valid.
-	ErrInvalidFilters = errors.Error("invalid_filters: filters invalid for finding user")
-)
-
-const (
-	pqErrInvalidTextRepresentation = "invalid_text_representation"
 )
 
 var timeNow = func() *time.Time {
@@ -92,7 +85,7 @@ func (s *Store) saveQuest(ctx context.Context, quest *model.Quest) (*model.Quest
 }
 
 func (s *Store) updateSteps(ctx context.Context, createdQuest *model.Quest, steps []model.Step) (*model.Quest, error) {
-	for i, _ := range steps {
+	for i := range steps {
 		steps[i].QuestId = createdQuest.ID
 		steps[i].CreatedAt = createdQuest.CreatedAt
 		steps[i].UpdatedAt = createdQuest.CreatedAt
@@ -154,6 +147,38 @@ func (s *Store) InsertQuest(ctx context.Context, quest *model.Quest) (*model.Que
 	createdQuest.Emails = quest.Emails
 
 	return createdQuest, nil
+}
+
+// GetQuestsByUser will get quests created by user
+func (s *Store) GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]model.Quest, error) {
+	ownerClause := fmt.Sprintf("owner='%s'", uuid)
+	limitClause := ""
+	if limit > 0 {
+		limitClause = fmt.Sprintf(" LIMIT %d OFFSET %d", limit, offset)
+	}
+
+	rows, err := s.db.QueryxContext(ctx, fmt.Sprintf("SELECT * FROM quests WHERE %s ORDER BY created_at ASC%s", ownerClause, limitClause))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.ErrNotFound.Wrap(err)
+		}
+
+		return nil, errors.ErrUnknown.Wrap(err)
+	}
+	defer rows.Close()
+
+	var quests []model.Quest
+
+	for rows.Next() {
+		var quest model.Quest
+		if err := rows.StructScan(&quest); err != nil {
+			logging.From(ctx).Error("failed to deserialize quest from database", zap.Error(err))
+		} else {
+			quests = append(quests, quest)
+		}
+	}
+
+	return quests, nil
 }
 
 //nolint:cyclop

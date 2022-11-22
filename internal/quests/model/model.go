@@ -61,8 +61,8 @@ type Quest struct {
 	Name        *string  `json:"name" db:"name"`
 	Description *string  `json:"description" db:"description"`
 	Owner       *string  `json:"owner" db:"owner"`
-	Steps       []Step   `json:"steps"`
-	Emails      *[]Email `json:"emails"`
+	Steps       []Step   `json:"steps,omitempty"`
+	Emails      *[]Email `json:"emails,omitempty"`
 
 	CreatedAt *time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at" db:"updated_at"`
