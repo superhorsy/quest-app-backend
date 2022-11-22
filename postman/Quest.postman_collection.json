@@ -342,7 +342,7 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.variables.set(\"password\", CryptoJS.MD5(\"abcdef\").toString());"
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -392,7 +392,7 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.variables.set(\"password\", CryptoJS.MD5(\"abcdef\").toString());"
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -401,8 +401,7 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"var jsonData = JSON.parse(responseBody);\r",
-									"postman.setEnvironmentVariable(\"user_id\", jsonData.data.id);"
+									""
 								],
 								"type": "text/javascript"
 							}
