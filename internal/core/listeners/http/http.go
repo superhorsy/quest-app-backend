@@ -54,7 +54,7 @@ func New(s Service, cfg Config) (*Server, error) {
 	// cors.Default() setup the middleware with default options being
 	// all origins accepted with simple methods (GET, POST). See
 	// documentation below for more options.
-	handler := cors.Default().Handler(r)
+	handler := cors.AllowAll().Handler(r)
 
 	return &Server{
 		server: &http.Server{
