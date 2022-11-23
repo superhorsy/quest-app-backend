@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	questModel "github.com/superhorsy/quest-app-backend/internal/quests/model"
 	"io"
 	"net/http"
@@ -43,6 +44,10 @@ func (s *Server) createQuest(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) updateQuest(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
+	//vars := mux.Vars(r)
+	//id := vars["id"]
+
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		logging.From(ctx).Error("failed to read request body", zap.Error(err))
@@ -68,10 +73,24 @@ func (s *Server) updateQuest(w http.ResponseWriter, r *http.Request) {
 	handleResponse(ctx, w, updatedQuest)
 }
 
-func (s *Server) getQuestsByUser(w http.ResponseWriter, r *http.Request) {
+func (s *Server) getQuest(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	w.Header().Add("Content-Type", "application/json")
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	quest, err := s.quests.GetQuest(ctx, id)
+	if err != nil {
+		logging.From(ctx).Error("failed to fetch quest", zap.Error(err))
+		handleError(ctx, w, err)
+		return
+	}
+
+	handleResponse(ctx, w, quest)
+}
+
+func (s *Server) getQuestsByUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 
 	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {

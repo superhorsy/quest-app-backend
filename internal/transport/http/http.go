@@ -25,6 +25,7 @@ type Users interface {
 // Quests represents a type that can provide CRUD operations on quests.
 type Quests interface {
 	CreateQuest(ctx context.Context, quest *questModel.Quest) (*questModel.Quest, error)
+	GetQuest(ctx context.Context, id string) (*questModel.Quest, error)
 	UpdateQuest(ctx context.Context, quest *questModel.Quest) (*questModel.Quest, error)
 	GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]questModel.Quest, error)
 }
@@ -63,9 +64,11 @@ func (s *Server) AddRoutes(r *mux.Router) error {
 	r.Use(authHandler)
 	r.Use(EnforceJSONHandler)
 	r.Use(JsonResponse)
+	r.Use(AllowCors)
 
 	r.HandleFunc("/quests", s.createQuest).Methods(http.MethodPost)
-	r.HandleFunc("/quests", s.updateQuest).Methods(http.MethodPut)
+	r.HandleFunc("/quests/{id}", s.getQuest).Methods(http.MethodGet)
+	r.HandleFunc("/quests/{id}", s.updateQuest).Methods(http.MethodPut)
 	r.HandleFunc("/quests/created", s.getQuestsByUser).Methods(http.MethodGet)
 
 	r.HandleFunc("/user", s.createUser).Methods(http.MethodPost)

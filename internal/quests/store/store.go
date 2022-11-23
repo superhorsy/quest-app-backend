@@ -32,6 +32,10 @@ const (
 	ErrInvalidID = errors.Error("invalid_id: id is invalid")
 )
 
+const (
+	pqErrInvalidTextRepresentation = "invalid_text_representation"
+)
+
 var timeNow = func() *time.Time {
 	now := time.Now().UTC()
 	return &now
@@ -56,6 +60,27 @@ func New(db DB) *Store {
 	return &Store{
 		db: db,
 	}
+}
+
+// GetQuest fetches quest by id
+func (s *Store) GetQuest(ctx context.Context, id string) (*model.Quest, error) {
+	var q model.Quest
+
+	if err := s.db.GetContext(ctx, &q, "SELECT * FROM quests, steps WHERE quests.id = $1 AND steps.quest_id = $1", id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.ErrNotFound.Wrap(err)
+		}
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			if pqErr.Code.Name() == pqErrInvalidTextRepresentation && strings.Contains(pqErr.Error(), "uuid") {
+				return nil, ErrInvalidID.Wrap(errors.ErrValidation.Wrap(err))
+			}
+		}
+
+		return nil, errors.ErrUnknown.Wrap(err)
+	}
+
+	return &q, nil
 }
 
 func (s *Store) saveQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error) {

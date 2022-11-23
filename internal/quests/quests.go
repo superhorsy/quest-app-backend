@@ -9,6 +9,7 @@ import (
 // Store represents a type for storing a user in a database.
 type Store interface {
 	InsertQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error)
+	GetQuest(ctx context.Context, id string) (*model.Quest, error)
 	GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]model.Quest, error)
 	UpdateQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error)
 }
@@ -43,6 +44,14 @@ func (q *Quests) CreateQuest(ctx context.Context, quest *model.Quest) (*model.Qu
 	})
 
 	return createdQuest, nil
+}
+
+func (q *Quests) GetQuest(ctx context.Context, id string) (*model.Quest, error) {
+	quest, err := q.store.GetQuest(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return quest, nil
 }
 
 // UpdateQuest updates quests. If there were any steps inside it deletes them and insert new regardless of already created steps

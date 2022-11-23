@@ -28,7 +28,16 @@ func EnforceJSONHandler(next http.Handler) http.Handler {
 
 func JsonResponse(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Content-Type", "application/json") // TODO might do this in application specific middleware instead
+		w.Header().Add("Content-Type", "application/json")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func AllowCors(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS")
+		w.Header().Add("Access-Control-Allow-Headers", "Origin, Content-Type, X-Auth-Token")
 		next.ServeHTTP(w, r)
 	})
 }
