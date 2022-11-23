@@ -67,9 +67,9 @@ func (s *Server) AddRoutes(r *mux.Router) error {
 	r.Use(AllowCors)
 
 	r.HandleFunc("/quests", s.createQuest).Methods(http.MethodPost)
+	r.HandleFunc("/quests/created", s.getQuestsByUser).Methods(http.MethodGet)
 	r.HandleFunc("/quests/{id}", s.getQuest).Methods(http.MethodGet)
 	r.HandleFunc("/quests/{id}", s.updateQuest).Methods(http.MethodPut)
-	r.HandleFunc("/quests/created", s.getQuestsByUser).Methods(http.MethodGet)
 
 	r.HandleFunc("/user", s.createUser).Methods(http.MethodPost)
 	r.HandleFunc("/user/{id}", s.getUser).Methods(http.MethodGet)
