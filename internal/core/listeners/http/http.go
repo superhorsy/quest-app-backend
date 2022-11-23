@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"fmt"
+	"github.com/rs/cors"
 	"net"
 	"net/http"
 	"time"
@@ -50,6 +51,11 @@ func New(s Service, cfg Config) (*Server, error) {
 		return nil, ErrAddRoutes.Wrap(err)
 	}
 
+	// cors.Default() setup the middleware with default options being
+	// all origins accepted with simple methods (GET, POST). See
+	// documentation below for more options.
+	handler := cors.Default().Handler(r)
+
 	return &Server{
 		server: &http.Server{
 			Addr: fmt.Sprintf(":%s", cfg.Port),
@@ -57,7 +63,7 @@ func New(s Service, cfg Config) (*Server, error) {
 				baseContext := context.Background()
 				return logging.With(baseContext, logging.From(baseContext))
 			},
-			Handler:           r,
+			Handler:           handler,
 			ReadHeaderTimeout: readHeaderTimeout,
 		},
 		port: cfg.Port,

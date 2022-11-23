@@ -59,12 +59,11 @@ func (s *Server) AddRoutes(r *mux.Router) error {
 
 	authHandler := httpauth.SimpleBasicAuth("test", "test")
 
-	r.HandleFunc("/login", s.login).Methods(http.MethodPost)
-
 	r.Use(authHandler)
 	r.Use(EnforceJSONHandler)
 	r.Use(JsonResponse)
-	r.Use(AllowCors)
+
+	//r.HandleFunc("/login", s.login).Methods(http.MethodPost)
 
 	r.HandleFunc("/quests", s.createQuest).Methods(http.MethodPost)
 	r.HandleFunc("/quests/created", s.getQuestsByUser).Methods(http.MethodGet)
