@@ -15,6 +15,9 @@ const (
 	EventTypeUserUpdated EventType = "user_updated"
 	// EventTypeUserDeleted is triggered after a user has been successfully deleted.
 	EventTypeUserDeleted EventType = "user_deleted"
+
+	EventTypeQuestCreated EventType = "quest_created"
+	EventTypeQuestUpdated EventType = "quest_updated"
 )
 
 // UserEvent represents an event that occurs on a user entity.

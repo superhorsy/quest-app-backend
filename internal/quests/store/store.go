@@ -84,11 +84,63 @@ func (s *Store) saveQuest(ctx context.Context, quest *model.Quest) (*model.Quest
 	return createdQuest, nil
 }
 
-func (s *Store) updateSteps(ctx context.Context, createdQuest *model.Quest, steps []model.Step) (*model.Quest, error) {
+func (s *Store) UpdateQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error) {
+	quest.UpdatedAt = timeNow()
+
+	res, err := s.db.NamedQueryContext(ctx,
+		`UPDATE quests SET "name" = :name, description = :description, "owner" = :owner, updated_at = :updated_at 
+			WHERE id = :id RETURNING *`, quest)
+	if err = checkWriteError(err); err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	if !res.Next() {
+		return nil, errors.ErrUnknown
+	}
+
+	updatedQuest := &model.Quest{}
+
+	if err := res.StructScan(&updatedQuest); err != nil {
+		return nil, errors.ErrUnknown.Wrap(err)
+	}
+
+	// Delete saved steps
+	_, err = s.db.ExecContext(ctx, "DELETE FROM steps WHERE quest_id = ?", updatedQuest.ID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.ErrNotFound.Wrap(err)
+		}
+		return nil, errors.ErrUnknown.Wrap(err)
+	}
+
+	// Update steps if there are any
+
+	if len(quest.Steps) != 0 {
+		return updatedQuest, nil
+	}
+
+	// Remove IDs from steps if there were any
+	for i, step := range quest.Steps {
+		emptyId := ""
+		if step.ID != &emptyId {
+			quest.Steps[i].ID = &emptyId
+		}
+	}
+
+	updatedQuest, err = s.updateSteps(ctx, updatedQuest, quest.Steps)
+	if err = checkWriteError(err); err != nil {
+		return nil, err
+	}
+
+	return updatedQuest, nil
+}
+
+func (s *Store) updateSteps(ctx context.Context, quest *model.Quest, steps []model.Step) (*model.Quest, error) {
 	for i := range steps {
-		steps[i].QuestId = createdQuest.ID
-		steps[i].CreatedAt = createdQuest.CreatedAt
-		steps[i].UpdatedAt = createdQuest.CreatedAt
+		steps[i].QuestId = quest.ID
+		steps[i].CreatedAt = quest.UpdatedAt
+		steps[i].UpdatedAt = quest.UpdatedAt
 	}
 
 	res, err := s.db.NamedQueryContext(ctx, `INSERT INTO
@@ -100,31 +152,33 @@ func (s *Store) updateSteps(ctx context.Context, createdQuest *model.Quest, step
 		return nil, err
 	}
 
-	createdQuest.Steps = []model.Step{}
+	quest.Steps = []model.Step{}
 	var step model.Step
 	for res.Next() {
 		if err := res.StructScan(&step); err != nil {
 			return nil, errors.ErrUnknown.Wrap(err)
 		}
-		createdQuest.Steps = append(createdQuest.Steps, step)
+		quest.Steps = append(quest.Steps, step)
 	}
 
 	defer res.Close()
-	return createdQuest, nil
+	return quest, nil
 }
 
 func (s *Store) updateEmails(ctx context.Context, quest *model.Quest, emails *[]model.Email) error {
+	var args []map[string]interface{}
 	for _, email := range *emails {
 		arg := map[string]interface{}{
 			"quest_id": quest.ID,
 			"email":    email,
 		}
-		res, err := s.db.NamedQueryContext(ctx, `INSERT INTO quest_to_email(quest_id, email) VALUES (:quest_id, :email)`, arg)
-		if err = checkWriteError(err); err != nil {
-			return err
-		}
-		defer res.Close()
+		args = append(args, arg)
 	}
+	res, err := s.db.NamedQueryContext(ctx, `INSERT INTO quest_to_email(quest_id, email) VALUES (:quest_id, :email)`, args)
+	if err = checkWriteError(err); err != nil {
+		return err
+	}
+	defer res.Close()
 	return nil
 }
 
@@ -135,16 +189,12 @@ func (s *Store) InsertQuest(ctx context.Context, quest *model.Quest) (*model.Que
 		return nil, err
 	}
 
-	createdQuest, err = s.updateSteps(ctx, createdQuest, quest.Steps)
-	if err != nil {
-		return nil, err
+	if len(quest.Steps) != 0 {
+		createdQuest, err = s.updateSteps(ctx, createdQuest, quest.Steps)
+		if err != nil {
+			return nil, err
+		}
 	}
-
-	err = s.updateEmails(ctx, createdQuest, quest.Emails)
-	if err != nil {
-		return nil, err
-	}
-	createdQuest.Emails = quest.Emails
 
 	return createdQuest, nil
 }

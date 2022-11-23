@@ -41,6 +41,33 @@ func (s *Server) createQuest(w http.ResponseWriter, r *http.Request) {
 	handleResponse(ctx, w, createdQuest)
 }
 
+func (s *Server) updateQuest(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		logging.From(ctx).Error("failed to read request body", zap.Error(err))
+		handleError(ctx, w, errors.ErrUnknown.Wrap(err))
+		return
+	}
+
+	q := questModel.Quest{}
+
+	if err := json.Unmarshal(data, &q); err != nil {
+		logging.From(ctx).Error("failed to unmarshal json body", zap.Error(err))
+		handleError(ctx, w, errors.ErrInvalidRequest.Wrap(err))
+		return
+	}
+
+	updatedQuest, err := s.quests.UpdateQuest(ctx, &q)
+	if err != nil {
+		logging.From(ctx).Error("failed to update quest", zap.Error(err))
+		handleError(ctx, w, err)
+		return
+	}
+
+	handleResponse(ctx, w, updatedQuest)
+}
+
 func (s *Server) getQuestsByUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

@@ -10,6 +10,7 @@ import (
 type Store interface {
 	InsertQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error)
 	GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]model.Quest, error)
+	UpdateQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error)
 }
 
 // Events represents a type for producing events on user CRUD operations.
@@ -37,6 +38,21 @@ func (q *Quests) CreateQuest(ctx context.Context, quest *model.Quest) (*model.Qu
 	}
 	q.events.Produce(ctx, events.TopicQuests, events.QuestEvent{
 		EventType: events.EventTypeUserCreated,
+		ID:        *createdQuest.ID,
+		Quest:     createdQuest,
+	})
+
+	return createdQuest, nil
+}
+
+// UpdateQuest updates quests. If there were any steps inside it deletes them and insert new regardless of already created steps
+func (q *Quests) UpdateQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error) {
+	createdQuest, err := q.store.UpdateQuest(ctx, quest)
+	if err != nil {
+		return nil, err
+	}
+	q.events.Produce(ctx, events.TopicQuests, events.QuestEvent{
+		EventType: events.EventTypeQuestUpdated,
 		ID:        *createdQuest.ID,
 		Quest:     createdQuest,
 	})

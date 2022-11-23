@@ -1,4 +1,3 @@
 DROP TABLE IF EXISTS quest_to_email;
-DROP TABLE IF EXISTS quest_to_step;
-DROP TABLE IF EXISTS quests;
 DROP TABLE IF EXISTS steps;
+DROP TABLE IF EXISTS quests;
