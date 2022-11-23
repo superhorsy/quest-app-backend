@@ -38,6 +38,8 @@ func AllowCors(next http.Handler) http.Handler {
 		w.Header().Add("Access-Control-Allow-Origin", "*")
 		w.Header().Add("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS")
 		w.Header().Add("Access-Control-Allow-Headers", "Origin, Content-Type, X-Auth-Token")
+		w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Add("Access-Control-Max-Age", "86400")
 		next.ServeHTTP(w, r)
 	})
 }
