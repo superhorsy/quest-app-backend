@@ -74,7 +74,7 @@ func (s *Server) AddRoutes(r *mux.Router) error {
 	r.HandleFunc("/health", s.healthCheck).Methods(http.MethodGet)
 
 	r.Use(authHandler)
-	r.HandleFunc("/profile", s.getCurrentUser).Methods(http.MethodPost)
+	r.HandleFunc("/profile", s.getCurrentUser).Methods(http.MethodGet)
 
 	r.HandleFunc("/quests", s.createQuest).Methods(http.MethodPost)
 	r.HandleFunc("/quests/created", s.getQuestsByUser).Methods(http.MethodGet)
