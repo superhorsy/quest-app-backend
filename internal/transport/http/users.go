@@ -22,7 +22,7 @@ type deletedUserResponse struct {
 	Success bool `json:"success"`
 }
 
-func (s *Server) login(w http.ResponseWriter, r *http.Request) {
+func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	data, err := io.ReadAll(r.Body)
@@ -51,33 +51,19 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	handleResponse(ctx, w, createdUser)
 }
 
-func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
+func (s *Server) getCurrentUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	data, err := io.ReadAll(r.Body)
+	userId := ctx.Value(ContextUserIdKey)
+
+	u, err := s.users.GetUser(ctx, userId.(string))
 	if err != nil {
-		logging.From(ctx).Error("failed to read request body", zap.Error(err))
-		handleError(ctx, w, errors.ErrUnknown.Wrap(err))
-		return
-	}
-
-	u := model.UserWithPass{}
-
-	if err := json.Unmarshal(data, &u); err != nil {
-		logging.From(ctx).Error("failed to unmarshal json body", zap.Error(err))
-		handleError(ctx, w, errors.ErrInvalidRequest.Wrap(err))
-		return
-	}
-
-	createdUser, err := s.users.CreateUser(ctx, &u)
-	if err != nil {
-		// TODO deal with different error types that affect the error response from the generic types
-		logging.From(ctx).Error("failed to create user", zap.Error(err))
+		logging.From(ctx).Error("failed to get user", zap.Error(err))
 		handleError(ctx, w, err)
 		return
 	}
 
-	handleResponse(ctx, w, createdUser)
+	handleResponse(ctx, w, u)
 }
 
 func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {

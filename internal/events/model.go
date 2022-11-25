@@ -18,6 +18,7 @@ const (
 
 	EventTypeQuestCreated EventType = "quest_created"
 	EventTypeQuestUpdated EventType = "quest_updated"
+	EventTypeQuestDeleted EventType = "quest_deleted"
 )
 
 // UserEvent represents an event that occurs on a user entity.
@@ -28,7 +29,7 @@ type UserEvent struct {
 }
 
 type QuestEvent struct {
-	EventType EventType         `json:"event_type"`
-	ID        string            `json:"id"`
-	Quest     *questModel.Quest `json:"quest"`
+	EventType EventType                  `json:"event_type"`
+	ID        string                     `json:"id"`
+	Quest     *questModel.QuestWithSteps `json:"quest"`
 }

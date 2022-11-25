@@ -43,6 +43,15 @@ type Users struct {
 	events Events
 }
 
+func (u *Users) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
+	user, err := u.store.GetUserByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
 // New will instantiate a new instance of Users.
 func New(s Store, e Events) *Users {
 	return &Users{
@@ -109,7 +118,7 @@ func (u *Users) FindUsers(ctx context.Context, filters []model.Filter, offset, l
 		}
 
 		switch f.Field {
-		case model.FieldFirstName, model.FieldLastName, model.FieldNickname, model.FieldEmail, model.FieldCountry:
+		case model.FieldFirstName, model.FieldLastName, model.FieldNickname, model.FieldEmail:
 		// noop
 		default:
 			err := ErrInvalidFilterField.Wrap(errors.ErrValidation)

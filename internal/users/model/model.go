@@ -16,7 +16,6 @@ type User struct {
 	Nickname  *string    `json:"nickname" db:"nickname"`
 	Password  *string    `json:"-" db:"password"`
 	Email     *string    `json:"email" db:"email"`
-	Country   *string    `json:"country" db:"country"`
 	CreatedAt *time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at" db:"updated_at"`
 }
@@ -33,8 +32,6 @@ const (
 	FieldNickname Field = "nickname"
 	// FieldEmail represents the email field.
 	FieldEmail Field = "email"
-	// FieldCountry represents the country field.
-	FieldCountry Field = "country"
 )
 
 // MatchType is an enum providing valid matching mechanisms for filtering values.

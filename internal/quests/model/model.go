@@ -55,13 +55,25 @@ func (a *AnswerContent) Scan(value interface{}) error {
 
 type Email string
 
+// QuestWithSteps represents a quest
+type QuestWithSteps struct {
+	ID          *string `json:"id" db:"id"`
+	Name        *string `json:"name" db:"name"`
+	Description *string `json:"description" db:"description"`
+	Owner       *string `json:"owner" db:"owner"`
+	Steps       []Step  `json:"steps"`
+
+	CreatedAt *time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at" db:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at" db:"deleted_at"`
+}
+
 // Quest represents a quest
 type Quest struct {
 	ID          *string `json:"id" db:"id"`
 	Name        *string `json:"name" db:"name"`
 	Description *string `json:"description" db:"description"`
 	Owner       *string `json:"owner" db:"owner"`
-	Steps       []Step  `json:"steps"`
 
 	CreatedAt *time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at" db:"updated_at"`

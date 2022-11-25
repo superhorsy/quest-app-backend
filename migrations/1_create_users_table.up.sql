@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS users (
     nickname VARCHAR (255) NOT NULL CHECK (nickname <> ''),
     password VARCHAR (255) NOT NULL CHECK (password <> ''),
     email email NOT NULL,
-    country VARCHAR (255) NOT NULL CHECK (country <> ''),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
     PRIMARY KEY (id),
@@ -44,8 +43,3 @@ CREATE INDEX trgm_idx_users_nickname ON users USING gin (nickname gin_trgm_ops);
 CREATE UNIQUE INDEX email_idx ON users (email);
 
 CREATE INDEX trgm_idx_users_email ON users USING gin (email gin_trgm_ops);
-
-/* country index */
-CREATE INDEX idx_users_country ON users (country);
-
-CREATE INDEX trgm_idx_users_country ON users USING gin (country gin_trgm_ops);

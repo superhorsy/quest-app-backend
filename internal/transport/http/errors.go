@@ -11,6 +11,10 @@ import (
 	"go.uber.org/zap"
 )
 
+type ErrorMessage struct {
+	Error string `json:"error"`
+}
+
 func handleError(ctx context.Context, w http.ResponseWriter, err error) {
 	logging.From(ctx).Error("error occurred in request", zap.Error(err))
 
@@ -27,13 +31,12 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
-	errJSON := struct {
-		Error string `json:"error"`
-	}{
-		Error: strings.Split(err.Error(), errors.ErrSeperator)[0], // TODO we may need to strip additional error information
-	}
+	// TODO we may need to strip additional error information
+	errorMessage := strings.Split(err.Error(), errors.ErrSeperator)[0]
 
-	data, err := json.Marshal(errJSON)
+	data, err := json.Marshal(ErrorMessage{
+		Error: errorMessage,
+	})
 	if err != nil {
 		logging.From(ctx).Error("failed to serialize error response", zap.Error(err))
 		data = []byte(`{"error": "internal server error"}`)

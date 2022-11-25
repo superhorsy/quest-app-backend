@@ -23,7 +23,7 @@ func (s *Server) createQuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	q := questModel.Quest{}
+	q := questModel.QuestWithSteps{}
 
 	if err := json.Unmarshal(data, &q); err != nil {
 		logging.From(ctx).Error("failed to unmarshal json body", zap.Error(err))
@@ -31,9 +31,11 @@ func (s *Server) createQuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	id := ctx.Value(ContextUserIdKey).(string)
+	q.ID = &id
+
 	createdQuest, err := s.quests.CreateQuest(ctx, &q)
 	if err != nil {
-		// TODO deal with different error types that affect the error response from the generic types
 		logging.From(ctx).Error("failed to create quest", zap.Error(err))
 		handleError(ctx, w, err)
 		return
@@ -45,8 +47,8 @@ func (s *Server) createQuest(w http.ResponseWriter, r *http.Request) {
 func (s *Server) updateQuest(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	//vars := mux.Vars(r)
-	//id := vars["id"]
+	vars := mux.Vars(r)
+	id := vars["id"]
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -55,13 +57,15 @@ func (s *Server) updateQuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	q := questModel.Quest{}
+	q := questModel.QuestWithSteps{}
 
 	if err := json.Unmarshal(data, &q); err != nil {
 		logging.From(ctx).Error("failed to unmarshal json body", zap.Error(err))
 		handleError(ctx, w, errors.ErrInvalidRequest.Wrap(err))
 		return
 	}
+
+	q.ID = &id
 
 	updatedQuest, err := s.quests.UpdateQuest(ctx, &q)
 	if err != nil {
@@ -92,15 +96,7 @@ func (s *Server) getQuest(w http.ResponseWriter, r *http.Request) {
 func (s *Server) getQuestsByUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	uuid := r.URL.Query().Get("uuid")
-	if uuid == "" {
-		err := errors.New("uuid not found")
-		logging.From(ctx).Error("failed to create quest", zap.Error(err))
-		handleError(ctx, w, err)
-		return
-	}
-
-	limit := 0
+	limit := 50
 	limitQueryParam := r.URL.Query().Get("limit")
 	if limitQueryParam != "" {
 		var err error
@@ -124,7 +120,8 @@ func (s *Server) getQuestsByUser(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	quests, err := s.quests.GetQuestsByUser(ctx, uuid, offset, limit)
+	userId := ctx.Value(ContextUserIdKey)
+	quests, err := s.quests.GetQuestsByUser(ctx, userId.(string), offset, limit)
 	if err != nil {
 		logging.From(ctx).Error("failed to fetch quests", zap.Error(err))
 		handleError(ctx, w, err)
@@ -132,4 +129,21 @@ func (s *Server) getQuestsByUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	handleResponse(ctx, w, quests)
+}
+
+func (s *Server) deleteQuest(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	if err := s.quests.DeleteQuest(ctx, id); err != nil {
+		logging.From(ctx).Error("failed to delete quest", zap.Error(err))
+		handleError(ctx, w, err)
+		return
+	}
+
+	handleResponse(ctx, w, struct {
+		Success bool `json:"success"`
+	}{Success: true})
 }

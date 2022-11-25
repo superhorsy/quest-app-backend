@@ -8,10 +8,11 @@ import (
 
 // Store represents a type for storing a user in a database.
 type Store interface {
-	InsertQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error)
-	GetQuest(ctx context.Context, id string) (*model.Quest, error)
+	InsertQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error)
+	GetQuest(ctx context.Context, id string) (*model.QuestWithSteps, error)
 	GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]model.Quest, error)
-	UpdateQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error)
+	UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error)
+	DeleteUser(ctx context.Context, id string) error
 }
 
 // Events represents a type for producing events on user CRUD operations.
@@ -32,7 +33,7 @@ func New(s Store, e Events) *Quests {
 	}
 }
 
-func (q *Quests) CreateQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error) {
+func (q *Quests) CreateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
 	createdQuest, err := q.store.InsertQuest(ctx, quest)
 	if err != nil {
 		return nil, err
@@ -46,7 +47,7 @@ func (q *Quests) CreateQuest(ctx context.Context, quest *model.Quest) (*model.Qu
 	return createdQuest, nil
 }
 
-func (q *Quests) GetQuest(ctx context.Context, id string) (*model.Quest, error) {
+func (q *Quests) GetQuest(ctx context.Context, id string) (*model.QuestWithSteps, error) {
 	quest, err := q.store.GetQuest(ctx, id)
 	if err != nil {
 		return nil, err
@@ -55,7 +56,7 @@ func (q *Quests) GetQuest(ctx context.Context, id string) (*model.Quest, error) 
 }
 
 // UpdateQuest updates quests. If there were any steps inside it deletes them and insert new regardless of already created steps
-func (q *Quests) UpdateQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error) {
+func (q *Quests) UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
 	createdQuest, err := q.store.UpdateQuest(ctx, quest)
 	if err != nil {
 		return nil, err
@@ -76,4 +77,18 @@ func (q *Quests) GetQuestsByUser(ctx context.Context, ownerUuid string, offset i
 	}
 
 	return quests, nil
+}
+
+func (q *Quests) DeleteQuest(ctx context.Context, id string) error {
+	err := q.store.DeleteUser(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	q.events.Produce(ctx, events.TopicUsers, events.UserEvent{
+		EventType: events.EventTypeQuestDeleted,
+		ID:        id,
+	})
+
+	return nil
 }

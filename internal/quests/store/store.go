@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/superhorsy/quest-app-backend/internal/core/logging"
+	"github.com/superhorsy/quest-app-backend/internal/transport/http"
 	"go.uber.org/zap"
 	"strings"
 	"time"
@@ -26,10 +27,9 @@ const (
 	ErrNicknameAlreadyUsed = errors.Error("nickname_already_used: nickname is already in use")
 	// ErrEmptyPassword is returned when the password is empty.
 	ErrEmptyPassword = errors.Error("empty_password: password is empty")
-	// ErrEmptyCountry is returned when the country is empty.
-	ErrEmptyCountry = errors.Error("empty_country: password is empty")
 	// ErrInvalidID si returned when the ID is not a valid UUID or is empty.
-	ErrInvalidID = errors.Error("invalid_id: id is invalid")
+	ErrInvalidID       = errors.Error("invalid_id: id is invalid")
+	ErrQuestNotDeleted = errors.Error("quest not deleted")
 )
 
 const (
@@ -63,10 +63,12 @@ func New(db DB) *Store {
 }
 
 // GetQuest fetches quest by id
-func (s *Store) GetQuest(ctx context.Context, id string) (*model.Quest, error) {
-	var q model.Quest
+func (s *Store) GetQuest(ctx context.Context, id string) (*model.QuestWithSteps, error) {
+	var q model.QuestWithSteps
 
-	if err := s.db.GetContext(ctx, &q, "SELECT * FROM quests, steps WHERE quests.id = $1 AND steps.quest_id = $1", id); err != nil {
+	userId := ctx.Value(http.ContextUserIdKey).(string)
+
+	if err := s.db.GetContext(ctx, &q, "SELECT * FROM quests WHERE id = $1 AND owner = $2", id, userId); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.ErrNotFound.Wrap(err)
 		}
@@ -80,10 +82,27 @@ func (s *Store) GetQuest(ctx context.Context, id string) (*model.Quest, error) {
 		return nil, errors.ErrUnknown.Wrap(err)
 	}
 
+	res, err := s.db.QueryxContext(ctx, `SELECT * FROM steps WHERE quest_id = $1`, id)
+
+	if err = checkWriteError(err); err != nil {
+		return nil, err
+	}
+
+	q.Steps = []model.Step{}
+	var step model.Step
+	for res.Next() {
+		if err := res.StructScan(&step); err != nil {
+			return nil, errors.ErrUnknown.Wrap(err)
+		}
+		q.Steps = append(q.Steps, step)
+	}
+
+	defer res.Close()
+
 	return &q, nil
 }
 
-func (s *Store) saveQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error) {
+func (s *Store) saveQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
 	quest.CreatedAt = timeNow()
 	quest.UpdatedAt = quest.CreatedAt
 
@@ -101,7 +120,7 @@ func (s *Store) saveQuest(ctx context.Context, quest *model.Quest) (*model.Quest
 		return nil, errors.ErrUnknown
 	}
 
-	createdQuest := &model.Quest{}
+	createdQuest := &model.QuestWithSteps{}
 
 	if err := res.StructScan(&createdQuest); err != nil {
 		return nil, errors.ErrUnknown.Wrap(err)
@@ -109,29 +128,29 @@ func (s *Store) saveQuest(ctx context.Context, quest *model.Quest) (*model.Quest
 	return createdQuest, nil
 }
 
-func (s *Store) UpdateQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error) {
+func (s *Store) UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
 	quest.UpdatedAt = timeNow()
 
+	uId := ctx.Value(http.ContextUserIdKey).(string)
 	res, err := s.db.NamedQueryContext(ctx,
-		`UPDATE quests SET "name" = :name, description = :description, "owner" = :owner, updated_at = :updated_at 
-			WHERE id = :id RETURNING *`, quest)
+		fmt.Sprintf(`UPDATE quests SET "name" = :name, description = :description, updated_at = :updated_at 
+			WHERE id = :id AND "owner" = '%s' RETURNING *`, uId), quest)
 	if err = checkWriteError(err); err != nil {
 		return nil, err
 	}
-	defer res.Close()
-
 	if !res.Next() {
 		return nil, errors.ErrUnknown
 	}
+	defer res.Close()
 
-	updatedQuest := &model.Quest{}
+	updatedQuest := &model.QuestWithSteps{}
 
 	if err := res.StructScan(&updatedQuest); err != nil {
 		return nil, errors.ErrUnknown.Wrap(err)
 	}
 
 	// Delete saved steps
-	_, err = s.db.ExecContext(ctx, "DELETE FROM steps WHERE quest_id = ?", updatedQuest.ID)
+	_, err = s.db.ExecContext(ctx, "DELETE FROM steps WHERE quest_id = $1", updatedQuest.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.ErrNotFound.Wrap(err)
@@ -140,8 +159,7 @@ func (s *Store) UpdateQuest(ctx context.Context, quest *model.Quest) (*model.Que
 	}
 
 	// Update steps if there are any
-
-	if len(quest.Steps) != 0 {
+	if len(quest.Steps) == 0 {
 		return updatedQuest, nil
 	}
 
@@ -161,7 +179,7 @@ func (s *Store) UpdateQuest(ctx context.Context, quest *model.Quest) (*model.Que
 	return updatedQuest, nil
 }
 
-func (s *Store) updateSteps(ctx context.Context, quest *model.Quest, steps []model.Step) (*model.Quest, error) {
+func (s *Store) updateSteps(ctx context.Context, quest *model.QuestWithSteps, steps []model.Step) (*model.QuestWithSteps, error) {
 	for i := range steps {
 		steps[i].QuestId = quest.ID
 		steps[i].CreatedAt = quest.UpdatedAt
@@ -190,7 +208,7 @@ func (s *Store) updateSteps(ctx context.Context, quest *model.Quest, steps []mod
 	return quest, nil
 }
 
-func (s *Store) updateEmails(ctx context.Context, quest *model.Quest, emails *[]model.Email) error {
+func (s *Store) updateEmails(ctx context.Context, quest *model.QuestWithSteps, emails *[]model.Email) error {
 	var args []map[string]interface{}
 	for _, email := range *emails {
 		arg := map[string]interface{}{
@@ -208,7 +226,7 @@ func (s *Store) updateEmails(ctx context.Context, quest *model.Quest, emails *[]
 }
 
 // InsertQuest will add a new quest to the database using the provided data.
-func (s *Store) InsertQuest(ctx context.Context, quest *model.Quest) (*model.Quest, error) {
+func (s *Store) InsertQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
 	createdQuest, err := s.saveQuest(ctx, quest)
 	if err != nil {
 		return nil, err
@@ -222,6 +240,30 @@ func (s *Store) InsertQuest(ctx context.Context, quest *model.Quest) (*model.Que
 	}
 
 	return createdQuest, nil
+}
+
+func (s *Store) DeleteQuest(ctx context.Context, id string) error {
+	userId := ctx.Value(http.ContextUserIdKey).(string)
+	res, err := s.db.ExecContext(ctx, "DELETE FROM quests WHERE id = $1 AND owner = $2", id, userId)
+	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			if pqErr.Code.Name() == pqErrInvalidTextRepresentation && strings.Contains(pqErr.Error(), "uuid") {
+				return ErrInvalidID.Wrap(errors.ErrValidation.Wrap(err))
+			}
+		}
+
+		return errors.ErrUnknown.Wrap(err)
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return errors.ErrUnknown.Wrap(err)
+	}
+	if rows != 1 {
+		return ErrQuestNotDeleted.Wrap(errors.ErrNotFound)
+	}
+
+	return nil
 }
 
 // GetQuestsByUser will get quests created by user
@@ -275,8 +317,6 @@ func checkWriteError(err error) error {
 				return ErrEmptyNickname.Wrap(errors.ErrValidation.Wrap(err))
 			case strings.Contains(pqErr.Error(), "users_password_check"):
 				return ErrEmptyPassword.Wrap(errors.ErrValidation.Wrap(err))
-			case strings.Contains(pqErr.Error(), "users_country_check"):
-				return ErrEmptyCountry.Wrap(errors.ErrValidation.Wrap(err))
 			default:
 				return errors.ErrValidation.Wrap(err)
 			}
@@ -288,8 +328,6 @@ func checkWriteError(err error) error {
 				return ErrEmptyNickname.Wrap(errors.ErrValidation.Wrap(err))
 			case strings.Contains(pqErr.Error(), "password"):
 				return ErrEmptyPassword.Wrap(errors.ErrValidation.Wrap(err))
-			case strings.Contains(pqErr.Error(), "country"):
-				return ErrEmptyCountry.Wrap(errors.ErrValidation.Wrap(err))
 			default:
 				return errors.ErrValidation.Wrap(err)
 			}

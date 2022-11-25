@@ -23,8 +23,6 @@ const (
 	ErrNicknameAlreadyUsed = errors.Error("nickname_already_used: nickname is already in use")
 	// ErrEmptyPassword is returned when the password is empty.
 	ErrEmptyPassword = errors.Error("empty_password: password is empty")
-	// ErrEmptyCountry is returned when the country is empty.
-	ErrEmptyCountry = errors.Error("empty_country: password is empty")
 	// ErrInvalidID si returned when the ID is not a valid UUID or is empty.
 	ErrInvalidID = errors.Error("invalid_id: id is invalid")
 	// ErrUserNotUpdated is returned when a record can't be found to update.
@@ -72,8 +70,8 @@ func (s *Store) InsertUser(ctx context.Context, u *model.UserWithPass) (*model.U
 
 	res, err := s.db.NamedQueryContext(ctx,
 		`INSERT INTO 
-		users(first_name, last_name, nickname, password, email, country, created_at, updated_at) 
-		VALUES (:first_name, :last_name, :nickname, :password, :email, :country, :created_at, :updated_at) 
+		users(first_name, last_name, nickname, password, email, created_at, updated_at) 
+		VALUES (:first_name, :last_name, :nickname, :password, :email, :created_at, :updated_at) 
 		RETURNING *`, u)
 	if err = checkWriteError(err); err != nil {
 		return nil, err
@@ -145,7 +143,6 @@ func (s *Store) UpdateUser(ctx context.Context, u *model.UserWithPass) (*model.U
 		nickname = COALESCE(:nickname, nickname), 
 		password = COALESCE(:password, password),
 		email = COALESCE(:email, email),
-		country = COALESCE(:country, country),
 		updated_at = :updated_at 
 		WHERE id = :id
 		RETURNING *`, u)
@@ -210,8 +207,6 @@ func checkWriteError(err error) error {
 				return ErrEmptyNickname.Wrap(errors.ErrValidation.Wrap(err))
 			case strings.Contains(pqErr.Error(), "users_password_check"):
 				return ErrEmptyPassword.Wrap(errors.ErrValidation.Wrap(err))
-			case strings.Contains(pqErr.Error(), "users_country_check"):
-				return ErrEmptyCountry.Wrap(errors.ErrValidation.Wrap(err))
 			default:
 				return errors.ErrValidation.Wrap(err)
 			}
@@ -223,8 +218,6 @@ func checkWriteError(err error) error {
 				return ErrEmptyNickname.Wrap(errors.ErrValidation.Wrap(err))
 			case strings.Contains(pqErr.Error(), "password"):
 				return ErrEmptyPassword.Wrap(errors.ErrValidation.Wrap(err))
-			case strings.Contains(pqErr.Error(), "country"):
-				return ErrEmptyCountry.Wrap(errors.ErrValidation.Wrap(err))
 			default:
 				return errors.ErrValidation.Wrap(err)
 			}
