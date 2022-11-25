@@ -3,18 +3,17 @@ module github.com/superhorsy/quest-app-backend
 go 1.18
 
 require (
-	github.com/AlekSi/pointer v1.2.0
 	github.com/caarlos0/env/v6 v6.9.3
 	github.com/cenkalti/backoff/v4 v4.1.2
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-playground/validator/v10 v10.11.0
-	github.com/goji/httpauth v0.0.0-20160601135302-2da839ab0f4d
 	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/lib/pq v1.10.0
+	github.com/mailjet/mailjet-apiv3-go v0.0.0-20201009050126-c24bc15a9394
 	github.com/rs/cors v1.8.2
-	github.com/stretchr/testify v1.7.1
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.30.0
 	go.opentelemetry.io/otel v1.6.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.6.0
@@ -27,8 +26,6 @@ require (
 
 require (
 	github.com/Microsoft/go-winio v0.5.2 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/docker/docker v20.10.14+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
@@ -39,7 +36,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	go.opentelemetry.io/otel/internal/metric v0.27.0 // indirect
 	go.opentelemetry.io/otel/metric v0.27.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
@@ -47,5 +43,4 @@ require (
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
 	golang.org/x/sys v0.0.0-20220319134239-a9b59b0215f8 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

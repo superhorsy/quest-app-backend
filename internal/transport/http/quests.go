@@ -3,6 +3,7 @@ package http
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"github.com/superhorsy/quest-app-backend/internal/core/helpers"
 	questModel "github.com/superhorsy/quest-app-backend/internal/quests/model"
 	"io"
 	"net/http"
@@ -42,39 +43,6 @@ func (s *Server) createQuest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	handleResponse(ctx, w, createdQuest)
-}
-
-func (s *Server) updateQuest(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	vars := mux.Vars(r)
-	id := vars["id"]
-
-	data, err := io.ReadAll(r.Body)
-	if err != nil {
-		logging.From(ctx).Error("failed to read request body", zap.Error(err))
-		handleError(ctx, w, errors.ErrUnknown.Wrap(err))
-		return
-	}
-
-	q := questModel.QuestWithSteps{}
-
-	if err := json.Unmarshal(data, &q); err != nil {
-		logging.From(ctx).Error("failed to unmarshal json body", zap.Error(err))
-		handleError(ctx, w, errors.ErrInvalidRequest.Wrap(err))
-		return
-	}
-
-	q.ID = &id
-
-	updatedQuest, err := s.quests.UpdateQuest(ctx, &q)
-	if err != nil {
-		logging.From(ctx).Error("failed to update quest", zap.Error(err))
-		handleError(ctx, w, err)
-		return
-	}
-
-	handleResponse(ctx, w, updatedQuest)
 }
 
 func (s *Server) getQuest(w http.ResponseWriter, r *http.Request) {
@@ -146,4 +114,58 @@ func (s *Server) deleteQuest(w http.ResponseWriter, r *http.Request) {
 	handleResponse(ctx, w, struct {
 		Success bool `json:"success"`
 	}{Success: true})
+}
+
+func (s *Server) sendQuest(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	sendRequest, err := parseBodyIntoStruct(r, questModel.SendQuestRequest{})
+	if err != nil {
+		handleError(ctx, w, err)
+		return
+	}
+	sendRequest.QuestId = id
+
+	// Save to DB
+	if err := s.quests.AttachQuestToEmail(ctx, *sendRequest); err != nil {
+		logging.From(ctx).Error("failed to save send quest", zap.Error(err))
+		handleError(ctx, w, err)
+		return
+	}
+	// Send email
+	err = helpers.SendEmail(sendRequest.Email, sendRequest.Name)
+	if err != nil {
+		handleError(ctx, w, err)
+		return
+	}
+
+	handleResponse(ctx, w, struct {
+		Success bool `json:"success"`
+	}{Success: true})
+}
+
+func (s *Server) updateQuest(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	q, err := parseBodyIntoStruct(r, questModel.QuestWithSteps{})
+	if err != nil {
+		handleError(ctx, w, err)
+		return
+	}
+	q.ID = &id
+
+	updatedQuest, err := s.quests.UpdateQuest(ctx, q)
+	if err != nil {
+		logging.From(ctx).Error("failed to update quest", zap.Error(err))
+		handleError(ctx, w, err)
+		return
+	}
+
+	handleResponse(ctx, w, updatedQuest)
 }

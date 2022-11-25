@@ -19,6 +19,7 @@ const (
 	EventTypeQuestCreated EventType = "quest_created"
 	EventTypeQuestUpdated EventType = "quest_updated"
 	EventTypeQuestDeleted EventType = "quest_deleted"
+	EventTypeQuestSent    EventType = "quest_sent"
 )
 
 // UserEvent represents an event that occurs on a user entity.

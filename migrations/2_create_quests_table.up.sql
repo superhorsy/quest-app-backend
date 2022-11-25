@@ -15,9 +15,9 @@ CREATE TABLE IF NOT EXISTS quests
 CREATE TABLE IF NOT EXISTS steps
 (
     id               uuid                     DEFAULT uuid_generate_v4(),
-    quest_id         uuid NOT NULL,
+    quest_id         uuid                     NOT NULL,
     sort             int                      NOT NULL,
-    description    VARCHAR(255)             NOT NULL CHECK (description <> ''),
+    description      VARCHAR(255)             NOT NULL CHECK (description <> ''),
     question_type    VARCHAR                  NOT NULL,
     question_content VARCHAR(255)             NOT NULL,
     answer_type      VARCHAR                  NOT NULL,
@@ -32,11 +32,13 @@ CREATE TABLE IF NOT EXISTS steps
 
 CREATE TABLE IF NOT EXISTS quest_to_email
 (
-    quest_id uuid  NOT NULL,
-    email    email NOT NULL,
+    quest_id uuid    NOT NULL,
+    email    email   NOT NULL,
+    "name"     VARCHAR NOT NULL,
     PRIMARY KEY (quest_id, email),
     CONSTRAINT quest_id_email_unique UNIQUE (quest_id, email),
-    CONSTRAINT quest_id_fk_quests_id FOREIGN KEY (quest_id) REFERENCES quests (id) ON DELETE CASCADE
+--     restrict quest deletion when it is send to someone
+    CONSTRAINT quest_id_fk_quests_id FOREIGN KEY (quest_id) REFERENCES quests (id) ON DELETE RESTRICT
 );
 
 

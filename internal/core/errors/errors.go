@@ -80,8 +80,7 @@ func (w wrappedError) As(target interface{}) bool {
 	return Error(w.msg).As(target)
 }
 
-// Implements https://golang.org/pkg/errors/#Unwrap allow the cause
-// error to be retrieved.
+// Unwrap Implements https://golang.org/pkg/errors/#Unwrap allow the cause error to be retrieved.
 func (w wrappedError) Unwrap() error {
 	return w.cause
 }

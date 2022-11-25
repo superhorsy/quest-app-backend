@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/superhorsy/quest-app-backend/internal/events"
 	"github.com/superhorsy/quest-app-backend/internal/quests/model"
+	questStore "github.com/superhorsy/quest-app-backend/internal/quests/store"
 )
 
 // Store represents a type for storing a user in a database.
@@ -12,7 +13,8 @@ type Store interface {
 	GetQuest(ctx context.Context, id string) (*model.QuestWithSteps, error)
 	GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]model.Quest, error)
 	UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error)
-	DeleteUser(ctx context.Context, id string) error
+	AttachQuestToEmail(ctx context.Context, request model.SendQuestRequest) (*model.SendQuestRequest, error)
+	DeleteQuest(ctx context.Context, id string) error
 }
 
 // Events represents a type for producing events on user CRUD operations.
@@ -26,11 +28,25 @@ type Quests struct {
 	events Events
 }
 
-func New(s Store, e Events) *Quests {
+func New(s *questStore.Store, e Events) *Quests {
 	return &Quests{
 		store:  s,
 		events: e,
 	}
+}
+
+func (q *Quests) AttachQuestToEmail(ctx context.Context, request model.SendQuestRequest) error {
+	attachment, err := q.store.AttachQuestToEmail(ctx, request)
+	if err != nil {
+		return err
+	}
+
+	q.events.Produce(ctx, events.TopicUsers, events.QuestEvent{
+		EventType: events.EventTypeQuestSent,
+		ID:        attachment.QuestId,
+	})
+
+	return nil
 }
 
 func (q *Quests) CreateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
@@ -80,7 +96,7 @@ func (q *Quests) GetQuestsByUser(ctx context.Context, ownerUuid string, offset i
 }
 
 func (q *Quests) DeleteQuest(ctx context.Context, id string) error {
-	err := q.store.DeleteUser(ctx, id)
+	err := q.store.DeleteQuest(ctx, id)
 	if err != nil {
 		return err
 	}

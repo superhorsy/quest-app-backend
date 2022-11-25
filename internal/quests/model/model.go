@@ -79,3 +79,9 @@ type Quest struct {
 	UpdatedAt *time.Time `json:"updated_at" db:"updated_at"`
 	DeletedAt *time.Time `json:"deleted_at" db:"deleted_at"`
 }
+
+type SendQuestRequest struct {
+	QuestId string `json:"quest_id" db:"quest_id"`
+	Email   string `json:"email" db:"email"`
+	Name    string `json:"name" db:"name"`
+}

@@ -5,7 +5,11 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"github.com/superhorsy/quest-app-backend/internal/core/errors"
+	"github.com/superhorsy/quest-app-backend/internal/core/logging"
 	questModel "github.com/superhorsy/quest-app-backend/internal/quests/model"
+	"go.uber.org/zap"
+	"io"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -29,6 +33,7 @@ type Quests interface {
 	UpdateQuest(ctx context.Context, quest *questModel.QuestWithSteps) (*questModel.QuestWithSteps, error)
 	GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]questModel.Quest, error)
 	DeleteQuest(ctx context.Context, id string) error
+	AttachQuestToEmail(ctx context.Context, request questModel.SendQuestRequest) error
 }
 
 // DB represents a type that can be used to interact with the database.
@@ -76,6 +81,7 @@ func (s *Server) AddRoutes(r *mux.Router) error {
 	r.HandleFunc("/quests/{id}", s.getQuest).Methods(http.MethodGet)
 	r.HandleFunc("/quests/{id}", s.updateQuest).Methods(http.MethodPut)
 	r.HandleFunc("/quests/{id}", s.deleteQuest).Methods(http.MethodDelete)
+	r.HandleFunc("/quests/{id}/send", s.sendQuest).Methods(http.MethodPost)
 
 	//r.HandleFunc("/user", s.createUser).Methods(http.MethodPost)
 	//r.HandleFunc("/user/{id}", s.getUser).Methods(http.MethodGet)
@@ -124,4 +130,20 @@ func handleResponse(ctx context.Context, w http.ResponseWriter, data interface{}
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func parseBodyIntoStruct[K any](r *http.Request, target K) (*K, error) {
+	ctx := r.Context()
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		logging.From(ctx).Error("failed to read request body", zap.Error(err))
+		return nil, errors.ErrUnknown.Wrap(err)
+	}
+
+	if err := json.Unmarshal(data, &target); err != nil {
+		logging.From(ctx).Error("failed to unmarshal json body", zap.Error(err))
+		return nil, errors.ErrInvalidRequest.Wrap(err)
+	}
+
+	return &target, nil
 }

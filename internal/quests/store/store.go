@@ -208,21 +208,13 @@ func (s *Store) updateSteps(ctx context.Context, quest *model.QuestWithSteps, st
 	return quest, nil
 }
 
-func (s *Store) updateEmails(ctx context.Context, quest *model.QuestWithSteps, emails *[]model.Email) error {
-	var args []map[string]interface{}
-	for _, email := range *emails {
-		arg := map[string]interface{}{
-			"quest_id": quest.ID,
-			"email":    email,
-		}
-		args = append(args, arg)
-	}
-	res, err := s.db.NamedQueryContext(ctx, `INSERT INTO quest_to_email(quest_id, email) VALUES (:quest_id, :email)`, args)
+func (s *Store) AttachQuestToEmail(ctx context.Context, request model.SendQuestRequest) (*model.SendQuestRequest, error) {
+	res, err := s.db.NamedQueryContext(ctx, `INSERT INTO quest_to_email(quest_id, email, name) VALUES (:quest_id, :email, :name)`, request)
 	if err = checkWriteError(err); err != nil {
-		return err
+		return nil, err
 	}
 	defer res.Close()
-	return nil
+	return &request, nil
 }
 
 // InsertQuest will add a new quest to the database using the provided data.

@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	// ErrInvalidEnvironment is returned when the SPEAKEASY_ENVIRONMENT environment variable is not set.
-	ErrInvalidEnvironment = errors.Error("SPEAKEASY_ENVIRONMENT is not set")
+	// ErrInvalidEnvironment is returned when the ENVIRONMENT variable is not set.
+	ErrInvalidEnvironment = errors.Error("ENVIRONMENT is not set")
 	// ErrValidation is returned when the configuration is invalid.
 	ErrValidation = errors.Error("invalid configuration")
 	// ErrEnvVars is returned when the environment variables are invalid.
@@ -58,7 +58,7 @@ func Load(ctx context.Context) (*Config, error) {
 }
 
 func loadFromFiles(ctx context.Context, cfg any) error {
-	environ := os.Getenv("SPEAKEASY_ENVIRONMENT")
+	environ := os.Getenv("ENVIRONMENT")
 	if environ == "" {
 		return ErrInvalidEnvironment
 	}
