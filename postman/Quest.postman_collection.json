@@ -76,15 +76,17 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"var jsonData = JSON.parse(responseBody);\r",
-									"postman.setEnvironmentVariable(\"user_id\", jsonData.data.id);"
+									""
 								],
 								"type": "text/javascript"
 							}
 						}
 					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
-						"method": "POST",
+						"method": "GET",
 						"header": [],
 						"body": {
 							"mode": "raw",
@@ -494,7 +496,7 @@
 					"response": []
 				},
 				{
-					"name": "/quests/{id} - получение 1 квеста Copy 2",
+					"name": "/quests/{id}/send - отправка по email",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -515,15 +517,12 @@
 							}
 						}
 					],
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
 					"request": {
-						"method": "GET",
+						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "",
+							"raw": "{\n    \"email\": \"adamuk.kirill@gmail.com\",\n    \"name\": \"Ира\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -531,7 +530,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/{{quest_id}}",
+							"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/{{quest_id}}/send",
 							"protocol": "{{scheme}}",
 							"host": [
 								"{{host}}"
@@ -541,7 +540,8 @@
 								"api",
 								"v1",
 								"quests",
-								"{{quest_id}}"
+								"{{quest_id}}",
+								"send"
 							]
 						}
 					},
