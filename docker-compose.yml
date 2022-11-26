@@ -1,0 +1,24 @@
+version: "3.9"
+services:
+  app:
+    build: .
+    ports:
+      - ${APP_PORT:-8080}:8080
+    environment:
+      - POSTGRES_DSN=postgresql://guest:guest@postgres:5432/quest-app-db?sslmode=disable # Test credentials
+      - ENVIRONMENT=docker
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres:alpine
+    restart: always
+    environment:
+      POSTGRES_USER: guest
+      POSTGRES_PASSWORD: guest
+      POSTGRES_DB: quest-app-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
