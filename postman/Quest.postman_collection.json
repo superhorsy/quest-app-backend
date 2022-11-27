@@ -90,7 +90,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"password\": \"{{password}}\",\r\n    \"email\": \"alice@bob.com\"\r\n}\r\n",
+							"raw": "",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -366,7 +366,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"id\": \"322e8bff-3b8e-41ed-9818-f17d10029b7a\",\r\n    \"name\": \"111Superquest\",\r\n    \"description\": \"Quset for my friend\",\r\n    \"steps\": [\r\n        {\r\n            \"id\": \"1681877c-04f3-4361-ace4-0b22dc6e8ceb\",\r\n            \"quest_id\": \"322e8bff-3b8e-41ed-9818-f17d10029b7a\",\r\n            \"sort\": 0,\r\n            \"description\": \"Step description\",\r\n            \"question_type\": \"text\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"answer_type\": \"text\",\r\n            \"answer_content\": [\r\n                \"tkrf\",\r\n                \"елка\"\r\n            ],\r\n            \"created_at\": \"2022-11-24T22:58:38.217447Z\",\r\n            \"updated_at\": \"2022-11-24T22:58:38.217447Z\",\r\n            \"deleted_at\": null\r\n        }\r\n    ]\r\n}",
+							"raw": "{\r\n    \"id\": \"322e8bff-3b8e-41ed-9818-f17d10029b7a\",\r\n    \"name\": \"Superquest1111\",\r\n    \"description\": \"Quset for my friend\",\r\n    \"steps\": [\r\n        {\r\n            \"id\": \"1681877c-04f3-4361-ace4-0b22dc6e8ceb\",\r\n            \"quest_id\": \"322e8bff-3b8e-41ed-9818-f17d10029b7a\",\r\n            \"sort\": 0,\r\n            \"description\": \"Step description\",\r\n            \"question_type\": \"text\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"answer_type\": \"text\",\r\n            \"answer_content\": [\r\n                \"tkrf\",\r\n                \"елка\"\r\n            ],\r\n            \"created_at\": \"2022-11-24T22:58:38.217447Z\",\r\n            \"updated_at\": \"2022-11-24T22:58:38.217447Z\",\r\n            \"deleted_at\": null\r\n        }\r\n    ]\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
