@@ -33,7 +33,7 @@ func (s *Server) createQuest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := ctx.Value(ContextUserIdKey).(string)
-	q.ID = &id
+	q.Owner = &id
 
 	createdQuest, err := s.quests.CreateQuest(ctx, &q)
 	if err != nil {
