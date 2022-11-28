@@ -1,3 +1,4 @@
 .idea
 .postgres-data
 .env
+/config/config-prod.yaml

@@ -40,11 +40,13 @@ func appStart(ctx context.Context, a *app.App) ([]app.Listener, error) {
 		return nil, err
 	}
 	a.OnShutdown(func() {
-		// Temp for development so database is cleared on shutdown
-		if err := db.RevertMigrations(ctx, "file://migrations"); err != nil {
-			logging.From(ctx).Error("failed to revert migrations", zap.Error(err))
+		if *cfg.PurgeOnRestart == true {
+			logging.From(ctx).Info("Clearing DB")
+			// Temp for development so database is cleared on shutdown
+			if err := db.RevertMigrations(ctx, "file://migrations"); err != nil {
+				logging.From(ctx).Error("failed to revert migrations", zap.Error(err))
+			}
 		}
-
 	})
 
 	// Instantiate and connect all our classes
