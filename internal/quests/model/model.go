@@ -67,16 +67,8 @@ const (
 
 // QuestWithSteps represents a quest
 type QuestWithSteps struct {
-	ID          *string `json:"id" db:"id"`
-	Name        *string `json:"name" db:"name"`
-	Description *string `json:"description" db:"description"`
-	Owner       *string `json:"owner" db:"owner"`
-	Theme       *Theme  `json:"theme" db:"theme"`
-	Steps       []Step  `json:"steps"`
-
-	CreatedAt *time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt *time.Time `json:"updated_at" db:"updated_at"`
-	DeletedAt *time.Time `json:"deleted_at" db:"deleted_at"`
+	Quest
+	Steps []Step `json:"steps"`
 }
 
 // Quest represents a quest
@@ -85,6 +77,7 @@ type Quest struct {
 	Name        *string `json:"name" db:"name"`
 	Description *string `json:"description" db:"description"`
 	Owner       *string `json:"owner" db:"owner"`
+	Theme       *Theme  `json:"theme" db:"theme"`
 
 	CreatedAt *time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at" db:"updated_at"`
