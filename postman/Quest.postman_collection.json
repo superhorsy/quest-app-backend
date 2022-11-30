@@ -1,8 +1,9 @@
 {
 	"info": {
-		"_postman_id": "8140b691-8e33-4516-8aa0-915c5299df6c",
+		"_postman_id": "72525c9b-9d1b-47f2-8ccc-5c1baf456ae4",
 		"name": "Quest",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24504428"
 	},
 	"item": [
 		{
@@ -142,7 +143,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"first_name\": \"Alice\",\r\n    \"last_name\": \"Bob\", \r\n    \"nickname\": \"AB123211\",\r\n    \"password\": \"{{password}}\",\r\n    \"email\": \"alice@bob.com\"\r\n}\r\n",
+							"raw": "{\r\n    \"first_name\": \"Alice\",\r\n    \"last_name\": \"Bob\", \r\n    \"nickname\": \"AB1232111\",\r\n    \"password\": \"{{password}}\",\r\n    \"email\": \"adamuk.kirill@gmail.com\"\r\n}\r\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -171,7 +172,7 @@
 			"name": "quests",
 			"item": [
 				{
-					"name": "/quests - создание квеста Copy",
+					"name": "/quests - создание квеста",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -198,7 +199,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"name\": \"Superquest\",\r\n    \"description\": \"Quset for my friend\", \r\n    \"owner\": \"{{user_id}}\",\r\n    \"steps\": [\r\n        {\r\n            \"sort\": 0, \r\n            \"description\": \"Step description\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"question_type\": \"text\",\r\n            \"answer_content\": [\r\n                \"tkrf\",\r\n                \"елка\"\r\n            ],\r\n            \"answer_type\": \"text\"\r\n        }\r\n    ]\r\n}\r\n",
+							"raw": "{\r\n    \"name\": \"Superquest\",\r\n    \"description\": \"Quset for my friend\",\r\n    \"theme\": \"valentine\",\r\n    \"steps\": [\r\n        {\r\n            \"sort\": 0,\r\n            \"description\": \"Step description\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"question_type\": \"text\",\r\n            \"answer_content\": [\r\n                \"tkrf\",\r\n                \"елка\"\r\n            ],\r\n            \"answer_type\": \"text\"\r\n        },\r\n        {\r\n            \"sort\": 1,\r\n            \"description\": \"Step description\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"question_type\": \"text\",\r\n            \"answer_content\": [\r\n                \"tkrf\",\r\n                \"елка\"\r\n            ],\r\n            \"answer_type\": \"text\"\r\n        },\r\n        {\r\n            \"sort\": 2,\r\n            \"description\": \"Step description\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"question_type\": \"text\",\r\n            \"answer_content\": [\r\n                \"tkrf\",\r\n                \"елка\"\r\n            ],\r\n            \"answer_type\": \"text\"\r\n        }\r\n    ]\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -269,74 +270,6 @@
 							"body": "asdfasfd"
 						}
 					]
-				},
-				{
-					"name": "/quests/created - получение созданных пользователем квестов",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/created",
-							"protocol": "{{scheme}}",
-							"host": [
-								"{{host}}"
-							],
-							"port": "{{port}}",
-							"path": [
-								"api",
-								"v1",
-								"quests",
-								"created"
-							],
-							"query": [
-								{
-									"key": "limit",
-									"value": "1",
-									"description": "Лимит, по дефолту - 50",
-									"disabled": true
-								},
-								{
-									"key": "offset",
-									"value": "1",
-									"description": "Оффсет, по дефолту - 0",
-									"disabled": true
-								}
-							]
-						}
-					},
-					"response": []
 				},
 				{
 					"name": "/quests/{id} - обновление квеста",
@@ -542,6 +475,142 @@
 								"quests",
 								"{{quest_id}}",
 								"send"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/quests/created - cозданные пользователем квесты",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/created",
+							"protocol": "{{scheme}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"quests",
+								"created"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "1",
+									"description": "Лимит, по дефолту - 50",
+									"disabled": true
+								},
+								{
+									"key": "offset",
+									"value": "1",
+									"description": "Оффсет, по дефолту - 0",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/quests/available - доступные квесты",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/available",
+							"protocol": "{{scheme}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"quests",
+								"available"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "1",
+									"description": "Лимит, по дефолту - 50",
+									"disabled": true
+								},
+								{
+									"key": "offset",
+									"value": "1",
+									"description": "Оффсет, по дефолту - 0",
+									"disabled": true
+								}
 							]
 						}
 					},

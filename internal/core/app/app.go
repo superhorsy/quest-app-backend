@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"github.com/superhorsy/quest-app-backend/internal/config"
 	"log"
 	"os"
 	"os/signal"
@@ -24,6 +25,7 @@ type OnShutdownFunc func()
 // App represents the application run by this service.
 type App struct {
 	Name          string
+	Config        config.Config
 	shutdownFuncs []OnShutdownFunc
 }
 

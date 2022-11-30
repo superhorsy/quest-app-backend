@@ -43,6 +43,12 @@ type Users struct {
 	events Events
 }
 
+// Quests provides functionality for CRUD operations on quests.
+type Quests struct {
+	store  Store
+	events Events
+}
+
 func (u *Users) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	user, err := u.store.GetUserByEmail(ctx, email)
 	if err != nil {

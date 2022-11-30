@@ -32,8 +32,9 @@ type Quests interface {
 	GetQuest(ctx context.Context, id string) (*questModel.QuestWithSteps, error)
 	UpdateQuest(ctx context.Context, quest *questModel.QuestWithSteps) (*questModel.QuestWithSteps, error)
 	GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]questModel.Quest, error)
+	GetQuestsAvailable(ctx context.Context, email string, offset int, limit int) ([]questModel.QuestAvailable, *questModel.Meta, error)
 	DeleteQuest(ctx context.Context, id string) error
-	AttachQuestToEmail(ctx context.Context, request questModel.SendQuestRequest) error
+	AssignQuestToEmail(ctx context.Context, request questModel.SendQuestRequest) error
 }
 
 // DB represents a type that can be used to interact with the database.
@@ -78,6 +79,7 @@ func (s *Server) AddRoutes(r *mux.Router) error {
 
 	r.HandleFunc("/quests", s.createQuest).Methods(http.MethodPost)
 	r.HandleFunc("/quests/created", s.getQuestsByUser).Methods(http.MethodGet)
+	r.HandleFunc("/quests/available", s.getAvailableQuests).Methods(http.MethodGet)
 	r.HandleFunc("/quests/{id}", s.getQuest).Methods(http.MethodGet)
 	r.HandleFunc("/quests/{id}", s.updateQuest).Methods(http.MethodPut)
 	r.HandleFunc("/quests/{id}", s.deleteQuest).Methods(http.MethodDelete)
@@ -105,7 +107,29 @@ func (s *Server) healthCheck(w http.ResponseWriter, r *http.Request) {
 
 type Response struct {
 	Data interface{} `json:"data"`
+	Meta interface{} `json:"meta,omitempty"`
 	Jwt  string      `json:"jwt,omitempty"`
+}
+
+func handleResponseWithMeta(ctx context.Context, w http.ResponseWriter, data interface{}, meta interface{}) {
+
+	jsonRes := Response{
+		Data: data,
+		Meta: meta,
+	}
+
+	dataBytes, err := json.Marshal(jsonRes)
+	if err != nil {
+		handleError(ctx, w, err)
+		return
+	}
+
+	if _, err := w.Write(dataBytes); err != nil {
+		handleError(ctx, w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func handleResponse(ctx context.Context, w http.ResponseWriter, data interface{}, jwt ...string) {

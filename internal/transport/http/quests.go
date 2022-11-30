@@ -99,6 +99,53 @@ func (s *Server) getQuestsByUser(w http.ResponseWriter, r *http.Request) {
 	handleResponse(ctx, w, quests)
 }
 
+func (s *Server) getAvailableQuests(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	limit := 50
+	limitQueryParam := r.URL.Query().Get("limit")
+	if limitQueryParam != "" {
+		var err error
+		queryLimit, err := strconv.Atoi(limitQueryParam)
+		if queryLimit < 1000 {
+			limit = queryLimit
+		}
+		if err != nil {
+			logging.From(ctx).Error("failed to read request body", zap.Error(err))
+			handleError(ctx, w, errors.ErrUnknown.Wrap(err))
+			return
+		}
+	}
+
+	offset := 0
+	offsetQueryParam := r.URL.Query().Get("offset")
+	if offsetQueryParam != "" {
+		var err error
+		offset, err = strconv.Atoi(limitQueryParam)
+		if err != nil {
+			logging.From(ctx).Error("failed to read request body", zap.Error(err))
+			handleError(ctx, w, errors.ErrUnknown.Wrap(err))
+			return
+		}
+	}
+
+	userId := ctx.Value(ContextUserIdKey)
+	user, err := s.users.GetUser(ctx, userId.(string))
+	if err != nil {
+		logging.From(ctx).Error("failed to find user", zap.Error(err))
+		handleError(ctx, w, err)
+		return
+	}
+	quests, meta, err := s.quests.GetQuestsAvailable(ctx, *user.Email, offset, limit)
+	if err != nil {
+		logging.From(ctx).Error("failed to fetch quests", zap.Error(err))
+		handleError(ctx, w, err)
+		return
+	}
+
+	handleResponseWithMeta(ctx, w, quests, meta)
+}
+
 func (s *Server) deleteQuest(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -130,7 +177,7 @@ func (s *Server) sendQuest(w http.ResponseWriter, r *http.Request) {
 	sendRequest.QuestId = id
 
 	// Save to DB
-	if err := s.quests.AttachQuestToEmail(ctx, *sendRequest); err != nil {
+	if err := s.quests.AssignQuestToEmail(ctx, *sendRequest); err != nil {
 		logging.From(ctx).Error("failed to save send quest", zap.Error(err))
 		handleError(ctx, w, err)
 		return

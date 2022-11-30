@@ -13,8 +13,9 @@ type Store interface {
 	GetQuest(ctx context.Context, id string) (*model.QuestWithSteps, error)
 	GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]model.Quest, error)
 	UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error)
-	AttachQuestToEmail(ctx context.Context, request model.SendQuestRequest) (*model.SendQuestRequest, error)
+	AssignQuestToEmail(ctx context.Context, request model.SendQuestRequest) error
 	DeleteQuest(ctx context.Context, id string) error
+	GetQuestsAvailable(ctx context.Context, uuid string, offset int, limit int) ([]model.QuestAvailable, *model.Meta, error)
 }
 
 // Events represents a type for producing events on user CRUD operations.
@@ -28,6 +29,14 @@ type Quests struct {
 	events Events
 }
 
+func (q *Quests) GetQuestsAvailable(ctx context.Context, email string, offset int, limit int) ([]model.QuestAvailable, *model.Meta, error) {
+	list, meta, err := q.store.GetQuestsAvailable(ctx, email, offset, limit)
+	if err != nil {
+		return nil, nil, err
+	}
+	return list, meta, nil
+}
+
 func New(s *questStore.Store, e Events) *Quests {
 	return &Quests{
 		store:  s,
@@ -35,16 +44,11 @@ func New(s *questStore.Store, e Events) *Quests {
 	}
 }
 
-func (q *Quests) AttachQuestToEmail(ctx context.Context, request model.SendQuestRequest) error {
-	attachment, err := q.store.AttachQuestToEmail(ctx, request)
+func (q *Quests) AssignQuestToEmail(ctx context.Context, request model.SendQuestRequest) error {
+	err := q.store.AssignQuestToEmail(ctx, request)
 	if err != nil {
 		return err
 	}
-
-	q.events.Produce(ctx, events.TopicUsers, events.QuestEvent{
-		EventType: events.EventTypeQuestSent,
-		ID:        attachment.QuestId,
-	})
 
 	return nil
 }

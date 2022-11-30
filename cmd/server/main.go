@@ -25,6 +25,9 @@ func main() {
 func appStart(ctx context.Context, a *app.App) ([]app.Listener, error) {
 	// Load configuration from config/config.yaml which contains details such as DB connection params
 	cfg, err := config.Load(ctx)
+	//
+	a.Config = *cfg
+
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +43,7 @@ func appStart(ctx context.Context, a *app.App) ([]app.Listener, error) {
 		return nil, err
 	}
 	a.OnShutdown(func() {
-		if *cfg.PurgeOnRestart == true {
+		if cfg.PurgeOnRestart == true {
 			logging.From(ctx).Info("Clearing DB")
 			// Temp for development so database is cleared on shutdown
 			if err := db.RevertMigrations(ctx, "file://migrations"); err != nil {

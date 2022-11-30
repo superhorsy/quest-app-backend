@@ -19,8 +19,8 @@ import (
 const (
 	// ErrInvalidEmail is returned when the email is not a valid address or is empty.
 	ErrInvalidEmail = errors.Error("invalid_email: email is invalid")
-	// ErrEmailAlreadyUsed is returned when the email address is already used via another user.
-	ErrEmailAlreadyUsed = errors.Error("email_already_used: email is already in use")
+	// ErrQuestAlreadySentToEmail is returned when the email address is already used via another user.
+	ErrQuestAlreadySentToEmail = errors.Error("Quest is already sent to this email")
 	// ErrEmptyNickname is returned when the nickname is empty.
 	ErrEmptyNickname = errors.Error("empty_nickname: nickname is empty")
 	// ErrNicknameAlreadyUsed is returned when the nickname is already used via another user.
@@ -45,6 +45,7 @@ var timeNow = func() *time.Time {
 type DB interface {
 	NamedQueryContext(ctx context.Context, query string, arg interface{}) (*sqlx.Rows, error)
 	GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
+	SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
 	NamedExecContext(ctx context.Context, query string, arg interface{}) (sql.Result, error)
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 	QueryxContext(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error)
@@ -60,6 +61,25 @@ func New(db DB) *Store {
 	return &Store{
 		db: db,
 	}
+}
+
+// InsertQuest will add a new quest to the database using the provided data.
+func (s *Store) InsertQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
+	createdQuest, err := s.saveQuest(ctx, quest)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(quest.Steps) != 0 {
+		createdQuest, err = s.updateSteps(ctx, createdQuest, quest.Steps)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		quest.Steps = []model.Step{}
+	}
+
+	return createdQuest, nil
 }
 
 // GetQuest fetches quest by id
@@ -102,30 +122,36 @@ func (s *Store) GetQuest(ctx context.Context, id string) (*model.QuestWithSteps,
 	return &q, nil
 }
 
-func (s *Store) saveQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
-	quest.CreatedAt = timeNow()
-	quest.UpdatedAt = quest.CreatedAt
-
-	res, err := s.db.NamedQueryContext(ctx,
-		`INSERT INTO 
-		quests("name",description,"owner",created_at,updated_at) 
-		VALUES (:name,:description,:owner,:created_at, :updated_at) 
-		RETURNING *`, quest)
-	if err = checkWriteError(err); err != nil {
-		return nil, err
-	}
-	defer res.Close()
-
-	if !res.Next() {
-		return nil, errors.ErrUnknown
+// GetQuestsByUser will get quests created by user
+func (s *Store) GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]model.Quest, error) {
+	ownerClause := fmt.Sprintf("owner='%s'", uuid)
+	limitClause := ""
+	if limit > 0 {
+		limitClause = fmt.Sprintf(" LIMIT %d OFFSET %d", limit, offset)
 	}
 
-	createdQuest := &model.QuestWithSteps{}
+	rows, err := s.db.QueryxContext(ctx, fmt.Sprintf("SELECT * FROM quests WHERE %s ORDER BY created_at ASC%s", ownerClause, limitClause))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.ErrNotFound.Wrap(err)
+		}
 
-	if err := res.StructScan(&createdQuest); err != nil {
 		return nil, errors.ErrUnknown.Wrap(err)
 	}
-	return createdQuest, nil
+	defer rows.Close()
+
+	var quests []model.Quest
+
+	for rows.Next() {
+		var quest model.Quest
+		if err := rows.StructScan(&quest); err != nil {
+			logging.From(ctx).Error("failed to deserialize quest from database", zap.Error(err))
+		} else {
+			quests = append(quests, quest)
+		}
+	}
+
+	return quests, nil
 }
 
 func (s *Store) UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
@@ -179,6 +205,88 @@ func (s *Store) UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*
 	return updatedQuest, nil
 }
 
+func (s *Store) AssignQuestToEmail(ctx context.Context, request model.SendQuestRequest) error {
+	res, err := s.db.NamedQueryContext(ctx, `INSERT INTO quest_to_email(quest_id, email, name) VALUES (:quest_id, :email, :name)`, request)
+	if err = checkWriteError(err); err != nil {
+		return err
+	}
+	defer res.Close()
+	return nil
+}
+
+func (s *Store) DeleteQuest(ctx context.Context, id string) error {
+	userId := ctx.Value(http.ContextUserIdKey).(string)
+	res, err := s.db.ExecContext(ctx, "DELETE FROM quests WHERE id = $1 AND owner = $2", id, userId)
+	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			if pqErr.Code.Name() == pqErrInvalidTextRepresentation && strings.Contains(pqErr.Error(), "uuid") {
+				return ErrInvalidID.Wrap(errors.ErrValidation.Wrap(err))
+			}
+		}
+
+		return errors.ErrUnknown.Wrap(err)
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return errors.ErrUnknown.Wrap(err)
+	}
+	if rows != 1 {
+		return ErrQuestNotDeleted.Wrap(errors.ErrNotFound)
+	}
+
+	return nil
+}
+
+func (s *Store) GetQuestsAvailable(ctx context.Context, email string, offset int, limit int) ([]model.QuestAvailable, *model.Meta, error) {
+	const query = `SELECT qe.quest_id,
+       q.name as quest_name,
+       q.description as quest_description,
+       qe.status,
+       qe.current_step as steps_current,
+       CASE when s.steps_count is NULL THEN 0 ELSE s.steps_count END AS steps_count,
+       u.id                                   as "owner.id",
+       concat(u.first_name, ' ', u.last_name) as "owner.name"
+FROM quests q
+         JOIN quest_to_email qe ON qe.quest_id = q.id
+         JOIN users u ON q.owner = u.id
+         FULL OUTER JOIN (SELECT DISTINCT steps.quest_id, COUNT(*) AS steps_count
+                           FROM steps GROUP BY steps.quest_id) as s ON qe.quest_id = s.quest_id
+WHERE qe.email = $1
+ORDER BY q.created_at ASC
+LIMIT $3 OFFSET $2`
+
+	var quests []model.QuestAvailable
+	err := s.db.SelectContext(ctx, &quests, query, email, offset, limit)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil, errors.ErrNotFound.Wrap(err)
+		}
+
+		return nil, nil, errors.ErrUnknown.Wrap(err)
+	}
+
+	const countQuery = `SELECT count(*) as total_count
+		FROM quests q
+    	JOIN quest_to_email qe ON qe.quest_id = q.id
+    	JOIN users u ON q.owner = u.id
+		WHERE qe.email = $1`
+
+	var meta model.Meta
+
+	err = s.db.GetContext(ctx, &meta, countQuery, email)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil, errors.ErrNotFound.Wrap(err)
+		}
+
+		return nil, nil, errors.ErrUnknown.Wrap(err)
+	}
+
+	return quests, &meta, nil
+}
+
 func (s *Store) updateSteps(ctx context.Context, quest *model.QuestWithSteps, steps []model.Step) (*model.QuestWithSteps, error) {
 	for i := range steps {
 		steps[i].QuestId = quest.ID
@@ -208,86 +316,30 @@ func (s *Store) updateSteps(ctx context.Context, quest *model.QuestWithSteps, st
 	return quest, nil
 }
 
-func (s *Store) AttachQuestToEmail(ctx context.Context, request model.SendQuestRequest) (*model.SendQuestRequest, error) {
-	res, err := s.db.NamedQueryContext(ctx, `INSERT INTO quest_to_email(quest_id, email, name) VALUES (:quest_id, :email, :name)`, request)
+func (s *Store) saveQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
+	quest.CreatedAt = timeNow()
+	quest.UpdatedAt = quest.CreatedAt
+
+	res, err := s.db.NamedQueryContext(ctx,
+		`INSERT INTO 
+		quests("name",description,"owner",theme, created_at,updated_at) 
+		VALUES (:name,:description,:owner,:theme, :created_at, :updated_at) 
+		RETURNING *`, quest)
 	if err = checkWriteError(err); err != nil {
 		return nil, err
 	}
 	defer res.Close()
-	return &request, nil
-}
 
-// InsertQuest will add a new quest to the database using the provided data.
-func (s *Store) InsertQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
-	createdQuest, err := s.saveQuest(ctx, quest)
-	if err != nil {
-		return nil, err
+	if !res.Next() {
+		return nil, errors.ErrUnknown
 	}
 
-	if len(quest.Steps) != 0 {
-		createdQuest, err = s.updateSteps(ctx, createdQuest, quest.Steps)
-		if err != nil {
-			return nil, err
-		}
-	}
+	createdQuest := &model.QuestWithSteps{}
 
-	return createdQuest, nil
-}
-
-func (s *Store) DeleteQuest(ctx context.Context, id string) error {
-	userId := ctx.Value(http.ContextUserIdKey).(string)
-	res, err := s.db.ExecContext(ctx, "DELETE FROM quests WHERE id = $1 AND owner = $2", id, userId)
-	if err != nil {
-		var pqErr *pq.Error
-		if errors.As(err, &pqErr) {
-			if pqErr.Code.Name() == pqErrInvalidTextRepresentation && strings.Contains(pqErr.Error(), "uuid") {
-				return ErrInvalidID.Wrap(errors.ErrValidation.Wrap(err))
-			}
-		}
-
-		return errors.ErrUnknown.Wrap(err)
-	}
-	rows, err := res.RowsAffected()
-	if err != nil {
-		return errors.ErrUnknown.Wrap(err)
-	}
-	if rows != 1 {
-		return ErrQuestNotDeleted.Wrap(errors.ErrNotFound)
-	}
-
-	return nil
-}
-
-// GetQuestsByUser will get quests created by user
-func (s *Store) GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]model.Quest, error) {
-	ownerClause := fmt.Sprintf("owner='%s'", uuid)
-	limitClause := ""
-	if limit > 0 {
-		limitClause = fmt.Sprintf(" LIMIT %d OFFSET %d", limit, offset)
-	}
-
-	rows, err := s.db.QueryxContext(ctx, fmt.Sprintf("SELECT * FROM quests WHERE %s ORDER BY created_at ASC%s", ownerClause, limitClause))
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.ErrNotFound.Wrap(err)
-		}
-
+	if err := res.StructScan(&createdQuest); err != nil {
 		return nil, errors.ErrUnknown.Wrap(err)
 	}
-	defer rows.Close()
-
-	var quests []model.Quest
-
-	for rows.Next() {
-		var quest model.Quest
-		if err := rows.StructScan(&quest); err != nil {
-			logging.From(ctx).Error("failed to deserialize quest from database", zap.Error(err))
-		} else {
-			quests = append(quests, quest)
-		}
-	}
-
-	return quests, nil
+	return createdQuest, nil
 }
 
 //nolint:cyclop
@@ -324,8 +376,8 @@ func checkWriteError(err error) error {
 				return errors.ErrValidation.Wrap(err)
 			}
 		case "unique_violation":
-			if strings.Contains(pqErr.Error(), "email_unique") {
-				return ErrEmailAlreadyUsed.Wrap(errors.ErrValidation.Wrap(err))
+			if strings.Contains(pqErr.Error(), "quest_id_email_unique") {
+				return ErrQuestAlreadySentToEmail.Wrap(errors.ErrValidation.Wrap(err))
 			} else if strings.Contains(pqErr.Error(), "nickname_unique") {
 				return ErrNicknameAlreadyUsed.Wrap(errors.ErrValidation.Wrap(err))
 			}

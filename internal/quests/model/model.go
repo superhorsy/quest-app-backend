@@ -55,12 +55,23 @@ func (a *AnswerContent) Scan(value interface{}) error {
 
 type Email string
 
+type Theme string
+
+const (
+	ThemeValentine Theme = "valentine"
+	ThemeChristmas Theme = "christmas"
+	ThemeBirthday  Theme = "birthday"
+	ThemeHalloween Theme = "halloween"
+	ThemeCommon    Theme = "common"
+)
+
 // QuestWithSteps represents a quest
 type QuestWithSteps struct {
 	ID          *string `json:"id" db:"id"`
 	Name        *string `json:"name" db:"name"`
 	Description *string `json:"description" db:"description"`
 	Owner       *string `json:"owner" db:"owner"`
+	Theme       *Theme  `json:"theme" db:"theme"`
 	Steps       []Step  `json:"steps"`
 
 	CreatedAt *time.Time `json:"created_at" db:"created_at"`
@@ -78,6 +89,40 @@ type Quest struct {
 	CreatedAt *time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at" db:"updated_at"`
 	DeletedAt *time.Time `json:"deleted_at" db:"deleted_at"`
+}
+
+type Status string
+
+const (
+	StatusNotStarted = "not_started"
+	StatusInProgress = "in_progress"
+	StatusFinished   = "finished"
+)
+
+type Assignment struct {
+	QuestId     string `json:"quest_id" db:"quest_id"`
+	Email       string `json:"email" db:"email"`
+	Status      Status `json:"status" db:"status"`
+	CurrentStep int    `json:"current_step" db:"current_step"`
+}
+
+type Owner struct {
+	ID       string `json:"id,omitempty" db:"id"`
+	FullName string `json:"name,omitempty" db:"name"`
+}
+
+type QuestAvailable struct {
+	QuestId          string `json:"quest_id" db:"quest_id"`
+	QuestName        string `json:"quest_name" db:"quest_name"`
+	QuestDescription string `json:"quest_description" db:"quest_description"`
+	Status           Status `json:"status" db:"status"`
+	CurrentStep      int    `json:"steps_current" db:"steps_current"`
+	StepsCount       int    `json:"steps_count" db:"steps_count"`
+	Owner            *Owner `json:"owner"`
+}
+
+type Meta struct {
+	TotalCount int `json:"total_count,omitempty" db:"total_count"`
 }
 
 type SendQuestRequest struct {

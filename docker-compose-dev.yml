@@ -11,6 +11,7 @@ services:
     environment:
       - POSTGRES_DSN=postgresql://guest:guest@postgres:5432/quest-app-db?sslmode=disable # Test credentials
       - ENVIRONMENT=${ENVIRONMENT:-docker}
+      - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY:-secret-key}
     # debug options
     security_opt:
       - "seccomp:unconfined"
