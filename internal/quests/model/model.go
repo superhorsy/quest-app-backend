@@ -58,7 +58,7 @@ type Email string
 type Theme string
 
 const (
-	ThemeValentine Theme = "valentine"
+	ThemeValentain Theme = "valentain"
 	ThemeChristmas Theme = "christmas"
 	ThemeBirthday  Theme = "birthday"
 	ThemeHalloween Theme = "halloween"
