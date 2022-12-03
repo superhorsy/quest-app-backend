@@ -13,9 +13,11 @@ type Store interface {
 	GetQuest(ctx context.Context, id string) (*model.QuestWithSteps, error)
 	GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]model.Quest, error)
 	UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error)
-	AssignQuestToEmail(ctx context.Context, request model.SendQuestRequest) error
 	DeleteQuest(ctx context.Context, id string) error
 	GetQuestsAvailable(ctx context.Context, uuid string, offset int, limit int) ([]model.QuestAvailable, *model.Meta, error)
+	CreateAssignment(ctx context.Context, request model.SendQuestRequest) error
+	GetAssignment(ctx context.Context, id string, email *string) (*model.Assignment, error)
+	UpdateAssignment(ctx context.Context, questId string, email *string, currentStep int, status model.Status) error
 }
 
 // Events represents a type for producing events on user CRUD operations.
@@ -29,12 +31,31 @@ type Quests struct {
 	events Events
 }
 
-func (q *Quests) GetQuestsAvailable(ctx context.Context, email string, offset int, limit int) ([]model.QuestAvailable, *model.Meta, error) {
-	list, meta, err := q.store.GetQuestsAvailable(ctx, email, offset, limit)
+func (q *Quests) CreateAssignment(ctx context.Context, request model.SendQuestRequest) error {
+	err := q.store.CreateAssignment(ctx, request)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
-	return list, meta, nil
+
+	return nil
+}
+
+func (q *Quests) GetAssignment(ctx context.Context, questId string, email *string) (*model.Assignment, error) {
+	ass, err := q.store.GetAssignment(ctx, questId, email)
+	if err != nil {
+		return nil, err
+	}
+
+	return ass, nil
+}
+
+func (q *Quests) UpdateAssignment(ctx context.Context, questId string, email *string, currentStep int, status model.Status) error {
+	err := q.store.UpdateAssignment(ctx, questId, email, currentStep, status)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func New(s *questStore.Store, e Events) *Quests {
@@ -42,15 +63,6 @@ func New(s *questStore.Store, e Events) *Quests {
 		store:  s,
 		events: e,
 	}
-}
-
-func (q *Quests) AssignQuestToEmail(ctx context.Context, request model.SendQuestRequest) error {
-	err := q.store.AssignQuestToEmail(ctx, request)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (q *Quests) CreateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
@@ -111,4 +123,12 @@ func (q *Quests) DeleteQuest(ctx context.Context, id string) error {
 	})
 
 	return nil
+}
+
+func (q *Quests) GetQuestsAvailable(ctx context.Context, email string, offset int, limit int) ([]model.QuestAvailable, *model.Meta, error) {
+	list, meta, err := q.store.GetQuestsAvailable(ctx, email, offset, limit)
+	if err != nil {
+		return nil, nil, err
+	}
+	return list, meta, nil
 }

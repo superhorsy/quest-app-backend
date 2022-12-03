@@ -34,7 +34,9 @@ type Quests interface {
 	GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]questModel.Quest, error)
 	GetQuestsAvailable(ctx context.Context, email string, offset int, limit int) ([]questModel.QuestAvailable, *questModel.Meta, error)
 	DeleteQuest(ctx context.Context, id string) error
-	AssignQuestToEmail(ctx context.Context, request questModel.SendQuestRequest) error
+	CreateAssignment(ctx context.Context, request questModel.SendQuestRequest) error
+	GetAssignment(ctx context.Context, questId string, email *string) (*questModel.Assignment, error)
+	UpdateAssignment(ctx context.Context, questId string, email *string, currentStep int, status questModel.Status) error
 }
 
 // DB represents a type that can be used to interact with the database.
@@ -84,6 +86,9 @@ func (s *Server) AddRoutes(r *mux.Router) error {
 	r.HandleFunc("/quests/{id}", s.updateQuest).Methods(http.MethodPut)
 	r.HandleFunc("/quests/{id}", s.deleteQuest).Methods(http.MethodDelete)
 	r.HandleFunc("/quests/{id}/send", s.sendQuest).Methods(http.MethodPost)
+	r.HandleFunc("/quests/{id}/start", s.startQuest).Methods(http.MethodPost)
+	r.HandleFunc("/quests/{id}/next", s.checkAnswer).Methods(http.MethodPost)
+	r.HandleFunc("/quests/{id}/status", s.status).Methods(http.MethodGet)
 
 	//r.HandleFunc("/user", s.createUser).Methods(http.MethodPost)
 	//r.HandleFunc("/user/{id}", s.getUser).Methods(http.MethodGet)

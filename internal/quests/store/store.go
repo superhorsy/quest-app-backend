@@ -205,8 +205,18 @@ func (s *Store) UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*
 	return updatedQuest, nil
 }
 
-func (s *Store) AssignQuestToEmail(ctx context.Context, request model.SendQuestRequest) error {
+func (s *Store) CreateAssignment(ctx context.Context, request model.SendQuestRequest) error {
 	res, err := s.db.NamedQueryContext(ctx, `INSERT INTO quest_to_email(quest_id, email, name) VALUES (:quest_id, :email, :name)`, request)
+	if err = checkWriteError(err); err != nil {
+		return err
+	}
+	defer res.Close()
+	return nil
+}
+
+func (s *Store) UpdateAssignment(ctx context.Context, questId string, email *string, currentStep int, status model.Status) error {
+	res, err := s.db.QueryxContext(ctx, `UPDATE quest_to_email SET "status" = $1, "current_step" = $2 WHERE quest_id = $3 and email = $4`,
+		status, currentStep, questId, email)
 	if err = checkWriteError(err); err != nil {
 		return err
 	}
@@ -286,6 +296,27 @@ LIMIT $3 OFFSET $2`
 
 	return quests, &meta, nil
 }
+
+func (s *Store) GetAssignment(ctx context.Context, questId string, email *string) (*model.Assignment, error) {
+	var a model.Assignment
+
+	if err := s.db.GetContext(ctx, &a, "SELECT * FROM quest_to_email WHERE quest_id = $1 AND email = $2", questId, email); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.ErrNotFound.Wrap(err)
+		}
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			if pqErr.Code.Name() == pqErrInvalidTextRepresentation && strings.Contains(pqErr.Error(), "uuid") {
+				return nil, ErrInvalidID.Wrap(errors.ErrValidation.Wrap(err))
+			}
+		}
+
+		return nil, errors.ErrUnknown.Wrap(err)
+	}
+	return &a, nil
+}
+
+// Private methods
 
 func (s *Store) updateSteps(ctx context.Context, quest *model.QuestWithSteps, steps []model.Step) (*model.QuestWithSteps, error) {
 	for i := range steps {
