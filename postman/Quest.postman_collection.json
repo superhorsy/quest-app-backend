@@ -172,6 +172,384 @@
 			"name": "quests",
 			"item": [
 				{
+					"name": "quest/{id}",
+					"item": [
+						{
+							"name": "/quests/{id} - обновление квеста",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);\r",
+											"postman.setEnvironmentVariable(\"quest_id\", jsonData.data.id);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"id\": \"322e8bff-3b8e-41ed-9818-f17d10029b7a\",\r\n    \"name\": \"Superquest1111\",\r\n    \"description\": \"Quset for my friend\",\r\n    \"steps\": [\r\n        {\r\n            \"id\": \"1681877c-04f3-4361-ace4-0b22dc6e8ceb\",\r\n            \"quest_id\": \"322e8bff-3b8e-41ed-9818-f17d10029b7a\",\r\n            \"sort\": 0,\r\n            \"description\": \"Step description\",\r\n            \"question_type\": \"text\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"answer_type\": \"text\",\r\n            \"answer_content\": [\r\n                \"tkrf\",\r\n                \"елка\"\r\n            ],\r\n            \"created_at\": \"2022-11-24T22:58:38.217447Z\",\r\n            \"updated_at\": \"2022-11-24T22:58:38.217447Z\",\r\n            \"deleted_at\": null\r\n        }\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/{{quest_id}}",
+									"protocol": "{{scheme}}",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"quests",
+										"{{quest_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/quests/{id} - удаление квеста",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/{{quest_id}}",
+									"protocol": "{{scheme}}",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"quests",
+										"{{quest_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/quests/{id} - получение 1 квеста Copy",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/{{quest_id}}",
+									"protocol": "{{scheme}}",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"quests",
+										"{{quest_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/quests/{id}/send - отправка по email",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"adamuk.kirill@gmail.com\",\n    \"name\": \"Ира\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/{{quest_id}}/send",
+									"protocol": "{{scheme}}",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"quests",
+										"{{quest_id}}",
+										"send"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "прохождение",
+					"item": [
+						{
+							"name": "/quests/{id}/start",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/{{quest_id}}/start",
+									"protocol": "{{scheme}}",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"quests",
+										"{{quest_id}}",
+										"start"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/quests/{id}/status",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/{{quest_id}}/status",
+									"protocol": "{{scheme}}",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"quests",
+										"{{quest_id}}",
+										"status"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/quests/{id}/next",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"answer_type\": \"text\",\n    \"answer\": \"елка\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/{{quest_id}}/next",
+									"protocol": "{{scheme}}",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"quests",
+										"{{quest_id}}",
+										"next"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
 					"name": "/quests - создание квеста",
 					"event": [
 						{
@@ -270,215 +648,6 @@
 							"body": "asdfasfd"
 						}
 					]
-				},
-				{
-					"name": "/quests/{id} - обновление квеста",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"var jsonData = JSON.parse(responseBody);\r",
-									"postman.setEnvironmentVariable(\"quest_id\", jsonData.data.id);"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"id\": \"322e8bff-3b8e-41ed-9818-f17d10029b7a\",\r\n    \"name\": \"Superquest1111\",\r\n    \"description\": \"Quset for my friend\",\r\n    \"steps\": [\r\n        {\r\n            \"id\": \"1681877c-04f3-4361-ace4-0b22dc6e8ceb\",\r\n            \"quest_id\": \"322e8bff-3b8e-41ed-9818-f17d10029b7a\",\r\n            \"sort\": 0,\r\n            \"description\": \"Step description\",\r\n            \"question_type\": \"text\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"answer_type\": \"text\",\r\n            \"answer_content\": [\r\n                \"tkrf\",\r\n                \"елка\"\r\n            ],\r\n            \"created_at\": \"2022-11-24T22:58:38.217447Z\",\r\n            \"updated_at\": \"2022-11-24T22:58:38.217447Z\",\r\n            \"deleted_at\": null\r\n        }\r\n    ]\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/{{quest_id}}",
-							"protocol": "{{scheme}}",
-							"host": [
-								"{{host}}"
-							],
-							"port": "{{port}}",
-							"path": [
-								"api",
-								"v1",
-								"quests",
-								"{{quest_id}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "/quests/{id} - удаление квеста",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/{{quest_id}}",
-							"protocol": "{{scheme}}",
-							"host": [
-								"{{host}}"
-							],
-							"port": "{{port}}",
-							"path": [
-								"api",
-								"v1",
-								"quests",
-								"{{quest_id}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "/quests/{id} - получение 1 квеста Copy",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/{{quest_id}}",
-							"protocol": "{{scheme}}",
-							"host": [
-								"{{host}}"
-							],
-							"port": "{{port}}",
-							"path": [
-								"api",
-								"v1",
-								"quests",
-								"{{quest_id}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "/quests/{id}/send - отправка по email",
-					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"email\": \"adamuk.kirill@gmail.com\",\n    \"name\": \"Ира\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/{{quest_id}}/send",
-							"protocol": "{{scheme}}",
-							"host": [
-								"{{host}}"
-							],
-							"port": "{{port}}",
-							"path": [
-								"api",
-								"v1",
-								"quests",
-								"{{quest_id}}",
-								"send"
-							]
-						}
-					},
-					"response": []
 				},
 				{
 					"name": "/quests/created - cозданные пользователем квесты",
