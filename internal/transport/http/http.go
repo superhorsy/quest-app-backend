@@ -7,9 +7,11 @@ import (
 	"encoding/json"
 	"github.com/superhorsy/quest-app-backend/internal/core/errors"
 	"github.com/superhorsy/quest-app-backend/internal/core/logging"
+	mediaModel "github.com/superhorsy/quest-app-backend/internal/media/model"
 	questModel "github.com/superhorsy/quest-app-backend/internal/quests/model"
 	"go.uber.org/zap"
 	"io"
+	"mime/multipart"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -39,6 +41,11 @@ type Quests interface {
 	UpdateAssignment(ctx context.Context, questId string, email *string, currentStep int, status questModel.Status) error
 }
 
+type Media interface {
+	UploadFile(ctx context.Context, file multipart.File, filename string, mediaType mediaModel.MediaType) (*mediaModel.MediaRecord, error)
+	GetMedia(ctx context.Context, id string) (*mediaModel.MediaRecord, error)
+}
+
 // DB represents a type that can be used to interact with the database.
 type DB interface {
 	PingContext(ctx context.Context) error
@@ -49,54 +56,60 @@ type Server struct {
 	users  Users
 	quests Quests
 	db     DB
+	media  Media
 }
 
 // New will instantiate a new instance of Server.
-func New(u Users, q Quests, db DB) *Server {
+func New(u Users, q Quests, db DB, m Media) *Server {
 	return &Server{
 		users:  u,
 		quests: q,
+		media:  m,
 		db:     db,
 	}
 }
 
 // AddRoutes will add the routes this server supports to the router.
 func (s *Server) AddRoutes(r *mux.Router) error {
-	r.Use(EnforceJSONHandler)
-	r.Use(JsonResponse)
 
-	//Authorisation
-	r.Path("/api/v1/login").Handler(http.HandlerFunc(s.login)).Methods(http.MethodPost)
-	r.Path("/api/v1/register").Handler(http.HandlerFunc(s.register)).Methods(http.MethodPost)
+	// Health check
+	r.HandleFunc("/health", s.healthCheck).Methods(http.MethodGet)
 
-	// Methods with auth
 	r = r.PathPrefix("/api").Subrouter()
 	r = r.PathPrefix("/v1").Subrouter()
 
-	//Health check
-	r.HandleFunc("/health", s.healthCheck).Methods(http.MethodGet)
+	//Authorisation
+	auth := r.Name("auth").Subrouter()
+	auth.Use(JsonResponse)
+	auth.Use(EnforceJSONHandler)
+	auth.Path("/login").Handler(http.HandlerFunc(s.login)).Methods(http.MethodPost)
+	auth.Path("/register").Handler(http.HandlerFunc(s.register)).Methods(http.MethodPost)
 
-	r.Use(authHandler)
-	r.HandleFunc("/profile", s.getCurrentUser).Methods(http.MethodGet)
+	// Media handler
+	media := r.Name("media").Subrouter()
+	media.Use(authHandler)
+	media.Use(JsonResponse)
+	media.HandleFunc("/media/upload", s.uploadMedia).Methods(http.MethodPost)
+	media.HandleFunc("/media/{id}", s.getMedia).Methods(http.MethodGet)
 
-	r.HandleFunc("/quests", s.createQuest).Methods(http.MethodPost)
-	r.HandleFunc("/quests/created", s.getQuestsByUser).Methods(http.MethodGet)
-	r.HandleFunc("/quests/available", s.getAvailableQuests).Methods(http.MethodGet)
-	r.HandleFunc("/quests/{id}", s.getQuest).Methods(http.MethodGet)
-	r.HandleFunc("/quests/{id}", s.updateQuest).Methods(http.MethodPut)
-	r.HandleFunc("/quests/{id}", s.deleteQuest).Methods(http.MethodDelete)
-	r.HandleFunc("/quests/{id}/send", s.sendQuest).Methods(http.MethodPost)
-	r.HandleFunc("/quests/{id}/start", s.startQuest).Methods(http.MethodPost)
-	r.HandleFunc("/quests/{id}/next", s.checkAnswer).Methods(http.MethodPost)
-	r.HandleFunc("/quests/{id}/status", s.status).Methods(http.MethodGet)
+	api := r.Name("api").Subrouter()
+	api.Use(authHandler)
+	api.Use(JsonResponse)
+	api.Use(EnforceJSONHandler)
 
-	//r.HandleFunc("/user", s.createUser).Methods(http.MethodPost)
-	//r.HandleFunc("/user/{id}", s.getUser).Methods(http.MethodGet)
-	//r.HandleFunc("/user/{id}", s.updateUser).Methods(http.MethodPut)
-	//r.HandleFunc("/user/{id}", s.deleteUser).Methods(http.MethodDelete)
-
-	// Not the most RESTful way of doing this as it won't really be cachable but provides easier parsing of the inputs for now
-	r.HandleFunc("/users/search", s.searchUsers).Methods(http.MethodPost)
+	// Profile
+	api.HandleFunc("/profile", s.getCurrentUser).Methods(http.MethodGet)
+	// Quests
+	api.HandleFunc("/quests", s.createQuest).Methods(http.MethodPost)
+	api.HandleFunc("/quests/created", s.getQuestsByUser).Methods(http.MethodGet)
+	api.HandleFunc("/quests/available", s.getAvailableQuests).Methods(http.MethodGet)
+	api.HandleFunc("/quests/{id}", s.getQuest).Methods(http.MethodGet)
+	api.HandleFunc("/quests/{id}", s.updateQuest).Methods(http.MethodPut)
+	api.HandleFunc("/quests/{id}", s.deleteQuest).Methods(http.MethodDelete)
+	api.HandleFunc("/quests/{id}/send", s.sendQuest).Methods(http.MethodPost)
+	api.HandleFunc("/quests/{id}/start", s.startQuest).Methods(http.MethodPost)
+	api.HandleFunc("/quests/{id}/next", s.checkAnswer).Methods(http.MethodPost)
+	api.HandleFunc("/quests/{id}/status", s.status).Methods(http.MethodGet)
 
 	return nil
 }

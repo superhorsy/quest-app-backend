@@ -6,6 +6,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"os"
 	"strings"
+	"time"
 )
 
 func HandleError(err error) {
@@ -50,4 +51,18 @@ func ParseToken(authHeader string) (jwt.MapClaims, error) {
 
 func SendEmail(_ string, _ string) error {
 	return nil
+}
+
+func TimeNow() *time.Time {
+	now := time.Now().UTC()
+	return &now
+}
+
+func SliceContains[K comparable](s []K, e K) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }

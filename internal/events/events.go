@@ -11,6 +11,7 @@ const (
 	// TopicUsers represents a topic for user entity events such as CRUD events.
 	TopicUsers  Topic = "users"
 	TopicQuests Topic = "quests"
+	TopicMedia  Topic = "media"
 )
 
 // Events represents an implementation that can produce events.

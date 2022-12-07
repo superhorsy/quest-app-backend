@@ -10,6 +10,8 @@ services:
       - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY:-secret-key}
     depends_on:
       - postgres
+    volumes:
+      - ./files:/root/files:consistent
   postgres:
     image: postgres:alpine
     restart: always
