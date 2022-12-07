@@ -1,9 +1,8 @@
 {
 	"info": {
-		"_postman_id": "72525c9b-9d1b-47f2-8ccc-5c1baf456ae4",
+		"_postman_id": "1395bfe2-e888-4101-b83f-dd50a28dd87e",
 		"name": "Quest",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "24504428"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
@@ -38,7 +37,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"password\": \"{{password}}\",\r\n    \"email\": \"alice@bob.com\"\r\n}\r\n",
+							"raw": "{\r\n    \"password\": \"{{password}}\",\r\n    \"email\": \"adamuk.kirill@gmail.com\"\r\n}\r\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -786,6 +785,164 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "upload",
+			"item": [
+				{
+					"name": "upload - загрузка файла",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);\r",
+									"postman.setEnvironmentVariable(\"media_id\", jsonData.data.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "type",
+									"value": "image",
+									"description": "Тип медиа: image или sound",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/Users/kadamuk/Desktop/png-transparent-spider-man-heroes-download-with-transparent-background-free-thumbnail.png"
+								}
+							],
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/media/upload",
+							"protocol": "{{scheme}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"media",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "media - получение данных о файле по id",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);\r",
+									"postman.setEnvironmentVariable(\"quest_id\", jsonData.data.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "type",
+									"value": "image",
+									"description": "Тип медиа: image или sound",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/Users/kadamuk/Desktop/png-transparent-spider-man-heroes-download-with-transparent-background-free-thumbnail.png"
+								}
+							],
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/media/{{media_id}}",
+							"protocol": "{{scheme}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"media",
+								"{{media_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "health - проверяет доступность АПИ",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{scheme}}://{{host}}:{{port}}/health",
+					"protocol": "{{scheme}}",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"auth": {
