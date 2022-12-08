@@ -122,7 +122,7 @@ func (s *Server) getAvailableQuests(w http.ResponseWriter, r *http.Request) {
 	offsetQueryParam := r.URL.Query().Get("offset")
 	if offsetQueryParam != "" {
 		var err error
-		offset, err = strconv.Atoi(limitQueryParam)
+		offset, err = strconv.Atoi(offsetQueryParam)
 		if err != nil {
 			logging.From(ctx).Error("failed to read request body", zap.Error(err))
 			handleError(ctx, w, errors.ErrUnknown.Wrap(err))

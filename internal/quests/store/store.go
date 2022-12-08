@@ -264,7 +264,7 @@ FROM quests q
                            FROM steps GROUP BY steps.quest_id) as s ON qe.quest_id = s.quest_id
 WHERE qe.email = $1
 ORDER BY q.created_at ASC
-LIMIT $3 OFFSET $2`
+OFFSET $2 LIMIT $3`
 
 	var quests []model.QuestAvailable
 	err := s.db.SelectContext(ctx, &quests, query, email, offset, limit)
