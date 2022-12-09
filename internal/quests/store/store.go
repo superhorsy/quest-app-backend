@@ -159,7 +159,7 @@ func (s *Store) UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*
 
 	uId := ctx.Value(http.ContextUserIdKey).(string)
 	res, err := s.db.NamedQueryContext(ctx,
-		fmt.Sprintf(`UPDATE quests SET "name" = :name, description = :description, updated_at = :updated_at 
+		fmt.Sprintf(`UPDATE quests SET "name" = :name, description = :description, theme = :theme, updated_at = :updated_at 
 			WHERE id = :id AND "owner" = '%s' RETURNING *`, uId), quest)
 	if err = checkWriteError(err); err != nil {
 		return nil, err
