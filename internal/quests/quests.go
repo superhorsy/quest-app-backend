@@ -2,9 +2,12 @@ package quests
 
 import (
 	"context"
+	"fmt"
+	"github.com/superhorsy/quest-app-backend/internal/core/errors"
 	"github.com/superhorsy/quest-app-backend/internal/events"
 	"github.com/superhorsy/quest-app-backend/internal/quests/model"
 	questStore "github.com/superhorsy/quest-app-backend/internal/quests/store"
+	"github.com/superhorsy/quest-app-backend/internal/transport/http"
 )
 
 // Store represents a type for storing a user in a database.
@@ -89,6 +92,10 @@ func (q *Quests) GetQuest(ctx context.Context, id string) (*model.QuestWithSteps
 
 // UpdateQuest updates quests. If there were any steps inside it deletes them and insert new regardless of already created steps
 func (q *Quests) UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
+	uId := ctx.Value(http.ContextUserIdKey).(string)
+	if *quest.Owner != uId {
+		return nil, errors.New(fmt.Sprintf("Bad owner ID %s for quest %s", *quest.Owner, *quest.ID))
+	}
 	createdQuest, err := q.store.UpdateQuest(ctx, quest)
 	if err != nil {
 		return nil, err

@@ -157,10 +157,8 @@ func (s *Store) GetQuestsByUser(ctx context.Context, uuid string, offset int, li
 func (s *Store) UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
 	quest.UpdatedAt = timeNow()
 
-	uId := ctx.Value(http.ContextUserIdKey).(string)
-	res, err := s.db.NamedQueryContext(ctx,
-		fmt.Sprintf(`UPDATE quests SET "name" = :name, description = :description, theme = :theme, updated_at = :updated_at 
-			WHERE id = :id AND "owner" = '%s' RETURNING *`, uId), quest)
+	res, err := s.db.NamedQueryContext(ctx, `UPDATE quests SET "name" = :name, description = :description, theme = :theme, updated_at = :updated_at 
+			WHERE id = :id AND "owner" = :owner RETURNING *`, quest)
 	if err = checkWriteError(err); err != nil {
 		return nil, err
 	}
