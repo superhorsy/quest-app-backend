@@ -3,7 +3,6 @@ package store
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github.com/superhorsy/quest-app-backend/internal/core/logging"
 	"github.com/superhorsy/quest-app-backend/internal/transport/http"
 	"go.uber.org/zap"
@@ -28,8 +27,9 @@ const (
 	// ErrEmptyPassword is returned when the password is empty.
 	ErrEmptyPassword = errors.Error("empty_password: password is empty")
 	// ErrInvalidID si returned when the ID is not a valid UUID or is empty.
-	ErrInvalidID       = errors.Error("invalid_id: id is invalid")
-	ErrQuestNotDeleted = errors.Error("quest not deleted")
+	ErrInvalidID        = errors.Error("invalid_id: id is invalid")
+	ErrQuestAlreadySent = errors.Error("Нельзя удалить квест, отправленый другу!")
+	ErrQuestNotDeleted  = errors.Error("quest not deleted")
 )
 
 const (
@@ -86,9 +86,7 @@ func (s *Store) InsertQuest(ctx context.Context, quest *model.QuestWithSteps) (*
 func (s *Store) GetQuest(ctx context.Context, id string) (*model.QuestWithSteps, error) {
 	var q model.QuestWithSteps
 
-	userId := ctx.Value(http.ContextUserIdKey).(string)
-
-	if err := s.db.GetContext(ctx, &q, "SELECT * FROM quests WHERE id = $1 AND owner = $2", id, userId); err != nil {
+	if err := s.db.GetContext(ctx, &q, "SELECT * FROM quests WHERE id = $1", id); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, errors.ErrNotFound.Wrap(err)
 		}
@@ -123,20 +121,14 @@ func (s *Store) GetQuest(ctx context.Context, id string) (*model.QuestWithSteps,
 }
 
 // GetQuestsByUser will get quests created by user
-func (s *Store) GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]model.Quest, error) {
-	ownerClause := fmt.Sprintf("owner='%s'", uuid)
-	limitClause := ""
-	if limit > 0 {
-		limitClause = fmt.Sprintf(" LIMIT %d OFFSET %d", limit, offset)
-	}
-
-	rows, err := s.db.QueryxContext(ctx, fmt.Sprintf("SELECT * FROM quests WHERE %s ORDER BY created_at ASC%s", ownerClause, limitClause))
+func (s *Store) GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]model.Quest, *model.Meta, error) {
+	rows, err := s.db.QueryxContext(ctx, "SELECT * FROM quests WHERE owner=$1 ORDER BY created_at ASC LIMIT $2 OFFSET $3", uuid, limit, offset)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.ErrNotFound.Wrap(err)
+			return nil, nil, errors.ErrNotFound.Wrap(err)
 		}
 
-		return nil, errors.ErrUnknown.Wrap(err)
+		return nil, nil, errors.ErrUnknown.Wrap(err)
 	}
 	defer rows.Close()
 
@@ -151,7 +143,21 @@ func (s *Store) GetQuestsByUser(ctx context.Context, uuid string, offset int, li
 		}
 	}
 
-	return quests, nil
+	const countQuery = `SELECT count(*) as total_count FROM quests q WHERE owner=$1`
+
+	var meta model.Meta
+
+	err = s.db.GetContext(ctx, &meta, countQuery, uuid)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil, errors.ErrNotFound.Wrap(err)
+		}
+
+		return nil, nil, errors.ErrUnknown.Wrap(err)
+	}
+
+	return quests, &meta, nil
 }
 
 func (s *Store) UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
@@ -230,6 +236,9 @@ func (s *Store) DeleteQuest(ctx context.Context, id string) error {
 		if errors.As(err, &pqErr) {
 			if pqErr.Code.Name() == pqErrInvalidTextRepresentation && strings.Contains(pqErr.Error(), "uuid") {
 				return ErrInvalidID.Wrap(errors.ErrValidation.Wrap(err))
+			}
+			if strings.Contains(pqErr.Error(), "quest_to_email") {
+				return ErrQuestAlreadySent.Wrap(errors.ErrValidation.Wrap(err))
 			}
 		}
 

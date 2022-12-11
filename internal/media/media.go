@@ -8,6 +8,7 @@ import (
 	"github.com/superhorsy/quest-app-backend/internal/media/model"
 	"github.com/superhorsy/quest-app-backend/internal/media/store"
 	"mime/multipart"
+	"os"
 	"path/filepath"
 )
 
@@ -47,7 +48,12 @@ func (m Media) UploadFile(ctx context.Context, file multipart.File, filename str
 	err = m.fileStorage.Upload(ctx, file, filename)
 
 	record.Filename = filename
-	record.Link = fmt.Sprintf("/static/%s", filename)
+
+	staticFilesEndpoint := os.Getenv("STATIC_FILES_ENDPOINT")
+	if staticFilesEndpoint == "" {
+		staticFilesEndpoint = "/files/"
+	}
+	record.Link = fmt.Sprintf("%s%s", staticFilesEndpoint, filename)
 
 	record, err = m.recordStore.UpdateMedia(ctx, record)
 	if err != nil {

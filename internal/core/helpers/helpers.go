@@ -49,10 +49,6 @@ func ParseToken(authHeader string) (jwt.MapClaims, error) {
 	return claims, nil
 }
 
-func SendEmail(_ string, _ string) error {
-	return nil
-}
-
 func TimeNow() *time.Time {
 	now := time.Now().UTC()
 	return &now

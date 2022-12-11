@@ -14,7 +14,7 @@ import (
 type Store interface {
 	InsertQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error)
 	GetQuest(ctx context.Context, id string) (*model.QuestWithSteps, error)
-	GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]model.Quest, error)
+	GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]model.Quest, *model.Meta, error)
 	UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error)
 	DeleteQuest(ctx context.Context, id string) error
 	GetQuestsAvailable(ctx context.Context, uuid string, offset int, limit int) ([]model.QuestAvailable, *model.Meta, error)
@@ -84,6 +84,7 @@ func (q *Quests) CreateQuest(ctx context.Context, quest *model.QuestWithSteps) (
 
 func (q *Quests) GetQuest(ctx context.Context, id string) (*model.QuestWithSteps, error) {
 	quest, err := q.store.GetQuest(ctx, id)
+
 	if err != nil {
 		return nil, err
 	}
@@ -109,13 +110,13 @@ func (q *Quests) UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (
 	return createdQuest, nil
 }
 
-func (q *Quests) GetQuestsByUser(ctx context.Context, ownerUuid string, offset int, limit int) ([]model.Quest, error) {
-	quests, err := q.store.GetQuestsByUser(ctx, ownerUuid, offset, limit)
+func (q *Quests) GetQuestsByUser(ctx context.Context, ownerUuid string, offset int, limit int) ([]model.Quest, *model.Meta, error) {
+	quests, meta, err := q.store.GetQuestsByUser(ctx, ownerUuid, offset, limit)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return quests, nil
+	return quests, meta, nil
 }
 
 func (q *Quests) DeleteQuest(ctx context.Context, id string) error {

@@ -2,11 +2,13 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/superhorsy/quest-app-backend/internal/core/helpers"
 	questModel "github.com/superhorsy/quest-app-backend/internal/quests/model"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -90,14 +92,14 @@ func (s *Server) getQuestsByUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userId := ctx.Value(ContextUserIdKey)
-	quests, err := s.quests.GetQuestsByUser(ctx, userId.(string), offset, limit)
+	quests, meta, err := s.quests.GetQuestsByUser(ctx, userId.(string), offset, limit)
 	if err != nil {
 		logging.From(ctx).Error("failed to fetch quests", zap.Error(err))
 		handleError(ctx, w, err)
 		return
 	}
 
-	handleResponse(ctx, w, quests)
+	handleResponseWithMeta(ctx, w, quests, meta)
 }
 
 func (s *Server) getAvailableQuests(w http.ResponseWriter, r *http.Request) {
@@ -199,11 +201,35 @@ func (s *Server) sendQuest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send email
-	err = helpers.SendEmail(sendRequest.Email, sendRequest.Name)
+	// Get user
+	userId := ctx.Value(ContextUserIdKey)
+	user, err := s.users.GetUser(ctx, userId.(string))
 	if err != nil {
+		logging.From(ctx).Error("failed to find user", zap.Error(err))
 		handleError(ctx, w, err)
 		return
+	}
+
+	mailingEnabled := os.Getenv("MAILING_ENABLED")
+	if mailingEnabled == "true" {
+		// Send email
+		go func() {
+			templateData := struct {
+				Name string
+				URL  string
+				IMG  string
+			}{
+				Name: sendRequest.Name,
+				URL:  "https://questy.fun",
+				IMG:  "https://questy.fun/files/10d26a38-2fdf-4f48-adff-3e052e7466f5.png",
+			}
+			subject := fmt.Sprintf("Ваш друг %s отправил вам квест на Questy.fun!", user.FullName())
+			err := helpers.SendEmail(sendRequest.Email, subject, "config/quest_invite.html", templateData)
+			if err != nil {
+				logging.From(ctx).Error("failed to send email", zap.Error(err))
+				return
+			}
+		}()
 	}
 
 	handleResponse(ctx, w, struct {
