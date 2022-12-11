@@ -50,7 +50,7 @@ func (m Media) UploadFile(ctx context.Context, file multipart.File, filename str
 	record.Filename = filename
 
 	staticFilesEndpoint := os.Getenv("STATIC_FILES_ENDPOINT")
-	if staticFilesEndpoint == "" {
+	if staticFilesEndpoint == "" || mediaType == model.Sound {
 		staticFilesEndpoint = "/files/"
 	}
 	record.Link = fmt.Sprintf("%s%s", staticFilesEndpoint, filename)
