@@ -143,6 +143,28 @@ func (s *Store) GetQuestsByUser(ctx context.Context, uuid string, offset int, li
 		}
 	}
 
+	res, err := s.db.QueryxContext(ctx, `SELECT qe.quest_id, qe.email, qe.name, qe.status, qe.current_step FROM quest_to_email qe JOIN quests q ON q.id = qe.quest_id
+         WHERE q.owner = $1`, uuid)
+
+	if err = checkWriteError(err); err != nil {
+		return nil, nil, err
+	}
+
+	for res.Next() {
+		recipient := &model.Recipient{}
+		if err := res.StructScan(&recipient); err != nil {
+			return nil, nil, errors.ErrUnknown.Wrap(err)
+		}
+		for i := range quests {
+			if *quests[i].ID == recipient.QuestId {
+				quests[i].Recipients = append(quests[i].Recipients, *recipient)
+				break
+			}
+		}
+	}
+
+	defer res.Close()
+
 	const countQuery = `SELECT count(*) as total_count FROM quests q WHERE owner=$1`
 
 	var meta model.Meta

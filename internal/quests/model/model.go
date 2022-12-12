@@ -76,15 +76,24 @@ type QuestWithSteps struct {
 
 // Quest represents a quest
 type Quest struct {
-	ID          *string `json:"id" db:"id"`
-	Name        *string `json:"name" db:"name"`
-	Description *string `json:"description" db:"description"`
-	Owner       *string `json:"owner" db:"owner"`
-	Theme       *Theme  `json:"theme" db:"theme"`
+	ID          *string     `json:"id" db:"id"`
+	Name        *string     `json:"name" db:"name"`
+	Description *string     `json:"description" db:"description"`
+	Owner       *string     `json:"owner" db:"owner"`
+	Theme       *Theme      `json:"theme" db:"theme"`
+	Recipients  []Recipient `json:"recipients"`
 
 	CreatedAt *time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at" db:"updated_at"`
 	DeletedAt *time.Time `json:"deleted_at" db:"deleted_at"`
+}
+
+type Recipient struct {
+	QuestId     string `json:"-" db:"quest_id"`
+	Email       string `json:"email" db:"email"`
+	Name        string `json:"name" db:"name"`
+	Status      string `json:"status" db:"status"`
+	CurrentStep int    `json:"current_step" db:"current_step"`
 }
 
 type Status string
