@@ -281,6 +281,7 @@ func (s *Store) GetQuestsAvailable(ctx context.Context, email string, offset int
 	const query = `SELECT qe.quest_id,
        q.name as quest_name,
        q.description as quest_description,
+       q.theme as quest_theme,
        qe.status,
        qe.current_step as steps_current,
        CASE when s.steps_count is NULL THEN 0 ELSE s.steps_count END AS steps_count,

@@ -121,6 +121,7 @@ type QuestAvailable struct {
 	QuestId          string `json:"quest_id" db:"quest_id"`
 	QuestName        string `json:"quest_name" db:"quest_name"`
 	QuestDescription string `json:"quest_description" db:"quest_description"`
+	QuestTheme       string `json:"quest_theme" db:"quest_theme"`
 	Status           Status `json:"status" db:"status"`
 	CurrentStep      int    `json:"steps_current" db:"steps_current"`
 	StepsCount       int    `json:"steps_count" db:"steps_count"`
