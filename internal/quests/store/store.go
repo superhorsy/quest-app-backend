@@ -117,7 +117,25 @@ func (s *Store) GetQuest(ctx context.Context, id string) (*model.QuestWithSteps,
 
 	defer res.Close()
 
+	r, err := s.GetRecipients(ctx, *q.Owner, *q.ID)
+	if err != nil {
+		return nil, err
+	}
+	q.Recipients = r
+
 	return &q, nil
+}
+
+func (s *Store) GetRecipients(ctx context.Context, ownerId string, questId string) ([]model.Recipient, error) {
+
+	r := []model.Recipient{}
+	query := `SELECT qe.quest_id, qe.email, qe.name, qe.status, qe.current_step FROM quest_to_email qe JOIN quests q ON q.id = qe.quest_id
+         WHERE q.owner = $1 AND q.id = $2`
+	err := s.db.SelectContext(ctx, &r, query, ownerId, questId)
+	if err = checkWriteError(err); err != nil {
+		return nil, err
+	}
+	return r, nil
 }
 
 // GetQuestsByUser will get quests created by user
