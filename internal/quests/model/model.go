@@ -149,6 +149,7 @@ type QuestLine struct {
 	PreviousQuestions       []Question  `json:"previous"`
 	QuestionCount           int         `json:"question_count"`
 	QuestStatus             Status      `json:"quest_status"`
+	QuestTheme              Theme       `json:"quest_theme"`
 }
 
 type Question struct {
@@ -168,7 +169,8 @@ type Node struct {
 	next  *Node
 }
 
-func NewQuestLineFromSteps(steps []Step, currentStep *int, status Status) *QuestLine {
+func (q QuestWithSteps) NewQuestLine(currentStep *int, status Status) *QuestLine {
+	steps := q.Steps
 	sort.Slice(steps, func(i, j int) bool {
 		return *steps[i].Sort < *steps[j].Sort
 	})
@@ -199,6 +201,7 @@ func NewQuestLineFromSteps(steps []Step, currentStep *int, status Status) *Quest
 	ql.List = &ll
 	ql.QuestionCount = len(steps)
 	ql.QuestStatus = status
+	ql.QuestTheme = *q.Theme
 	return ql
 }
 

@@ -309,7 +309,7 @@ func (s *Server) startQuest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create linked list from steps
-	ql := questModel.NewQuestLineFromSteps(q.Steps, nil, questModel.StatusInProgress)
+	ql := q.NewQuestLine(nil, questModel.StatusInProgress)
 
 	// Save to DB
 	if err := s.quests.UpdateAssignment(ctx, *q.ID, user.Email, *ql.List.Head.Value.Sort, questModel.StatusInProgress); err != nil {
@@ -372,7 +372,7 @@ func (s *Server) checkAnswer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create linked list from steps
-	ql := questModel.NewQuestLineFromSteps(q.Steps, &ass.CurrentStep, ass.Status)
+	ql := q.NewQuestLine(&ass.CurrentStep, ass.Status)
 
 	req, err := parseBodyIntoStruct(r, questModel.CheckAnswerRequest{})
 	if err != nil {
@@ -445,7 +445,7 @@ func (s *Server) status(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create linked list from steps
-	ql := questModel.NewQuestLineFromSteps(q.Steps, &ass.CurrentStep, ass.Status)
+	ql := q.NewQuestLine(&ass.CurrentStep, ass.Status)
 
 	handleResponse(ctx, w, ql)
 }
