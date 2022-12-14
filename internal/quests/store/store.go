@@ -203,7 +203,8 @@ func (s *Store) GetQuestsByUser(ctx context.Context, uuid string, offset int, li
 func (s *Store) UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
 	quest.UpdatedAt = timeNow()
 
-	res, err := s.db.NamedQueryContext(ctx, `UPDATE quests SET "name" = :name, description = :description, theme = :theme, updated_at = :updated_at 
+	res, err := s.db.NamedQueryContext(ctx, `UPDATE quests SET "name" = :name, description = :description, 
+                  theme = :theme, final_message = :final_message , updated_at = :updated_at 
 			WHERE id = :id AND "owner" = :owner RETURNING *`, quest)
 	if err = checkWriteError(err); err != nil {
 		return nil, err
@@ -401,8 +402,8 @@ func (s *Store) saveQuest(ctx context.Context, quest *model.QuestWithSteps) (*mo
 
 	res, err := s.db.NamedQueryContext(ctx,
 		`INSERT INTO 
-		quests("name",description,"owner",theme, created_at,updated_at) 
-		VALUES (:name,:description,:owner,:theme, :created_at, :updated_at) 
+		quests("name",description,"owner",theme,final_message,created_at,updated_at) 
+		VALUES (:name,:description,:owner,:theme,:final_message, :created_at, :updated_at) 
 		RETURNING *`, quest)
 	if err = checkWriteError(err); err != nil {
 		return nil, err

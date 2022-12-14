@@ -76,12 +76,13 @@ type QuestWithSteps struct {
 
 // Quest represents a quest
 type Quest struct {
-	ID          *string     `json:"id" db:"id"`
-	Name        *string     `json:"name" db:"name"`
-	Description *string     `json:"description" db:"description"`
-	Owner       *string     `json:"owner" db:"owner"`
-	Theme       *Theme      `json:"theme" db:"theme"`
-	Recipients  []Recipient `json:"recipients"`
+	ID           *string     `json:"id" db:"id"`
+	Name         *string     `json:"name" db:"name"`
+	Description  *string     `json:"description" db:"description"`
+	Owner        *string     `json:"owner" db:"owner"`
+	Theme        *Theme      `json:"theme" db:"theme"`
+	Recipients   []Recipient `json:"recipients"`
+	FinalMessage *string     `json:"final_message" db:"final_message"`
 
 	CreatedAt *time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at" db:"updated_at"`
@@ -150,6 +151,7 @@ type QuestLine struct {
 	QuestionCount           int         `json:"question_count"`
 	QuestStatus             Status      `json:"quest_status"`
 	QuestTheme              Theme       `json:"quest_theme"`
+	FinalMessage            *string     `json:"final_message,omitempty"`
 }
 
 type Question struct {

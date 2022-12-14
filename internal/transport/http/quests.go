@@ -260,6 +260,8 @@ func (s *Server) updateQuest(w http.ResponseWriter, r *http.Request) {
 	handleResponse(ctx, w, updatedQuest)
 }
 
+// Прохождение
+
 func (s *Server) startQuest(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -386,6 +388,7 @@ func (s *Server) checkAnswer(w http.ResponseWriter, r *http.Request) {
 		// If it was last one
 		if ql.IsLastStep() {
 			ql.QuestStatus = questModel.StatusFinished
+			ql.FinalMessage = q.FinalMessage
 			if err = s.quests.UpdateAssignment(ctx, *q.ID, user.Email, ql.CurrentStep(), questModel.StatusFinished); err != nil {
 				logging.From(ctx).Error("failed to start q", zap.Error(err))
 				handleError(ctx, w, err)
