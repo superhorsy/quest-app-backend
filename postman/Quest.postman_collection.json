@@ -1,8 +1,9 @@
 {
 	"info": {
-		"_postman_id": "1395bfe2-e888-4101-b83f-dd50a28dd87e",
+		"_postman_id": "5f7af348-67ff-47d8-b6ed-0d87a4fc377d",
 		"name": "Quest",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24504428"
 	},
 	"item": [
 		{
@@ -201,7 +202,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"id\": \"322e8bff-3b8e-41ed-9818-f17d10029b7a\",\r\n    \"name\": \"Superquest1111\",\r\n    \"description\": \"Quset for my friend\",\r\n    \"steps\": [\r\n        {\r\n            \"id\": \"1681877c-04f3-4361-ace4-0b22dc6e8ceb\",\r\n            \"quest_id\": \"322e8bff-3b8e-41ed-9818-f17d10029b7a\",\r\n            \"sort\": 0,\r\n            \"description\": \"Step description\",\r\n            \"question_type\": \"text\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"answer_type\": \"text\",\r\n            \"answer_content\": [\r\n                \"tkrf\",\r\n                \"елка\"\r\n            ],\r\n            \"created_at\": \"2022-11-24T22:58:38.217447Z\",\r\n            \"updated_at\": \"2022-11-24T22:58:38.217447Z\",\r\n            \"deleted_at\": null\r\n        }\r\n    ]\r\n}",
+									"raw": "{\r\n    \"id\": \"{{quest_id}}\",\r\n    \"name\": \"Superquest1111\",\r\n    \"description\": \"Quset for my friend\",\r\n    \"theme\": \"standart\",\r\n    \"final_message\": \"Молодец! С ДР!\",\r\n    \"rewards\": [\r\n        {\r\n            \"type\":\"coupon\",\r\n            \"value\":\"ozon\"\r\n        }\r\n    ],\r\n    \"steps\": [\r\n        {\r\n            \"id\": \"1681877c-04f3-4361-ace4-0b22dc6e8ceb\",\r\n            \"quest_id\": \"322e8bff-3b8e-41ed-9818-f17d10029b7a\",\r\n            \"sort\": 0,\r\n            \"description\": \"Step description\",\r\n            \"question_type\": \"text\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"answer_type\": \"text\",\r\n            \"answer_content\": [\r\n                \"tkrf\",\r\n                \"елка\"\r\n            ],\r\n            \"created_at\": \"2022-11-24T22:58:38.217447Z\",\r\n            \"updated_at\": \"2022-11-24T22:58:38.217447Z\",\r\n            \"deleted_at\": null\r\n        }\r\n    ]\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -576,7 +577,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"name\": \"Superquest\",\r\n    \"description\": \"Quset for my friend\",\r\n    \"theme\": \"valentain\",\r\n    \"steps\": [\r\n        {\r\n            \"sort\": 1,\r\n            \"description\": \"Step description\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"question_type\": \"text\",\r\n            \"answer_content\": [\r\n                \"tkrf\",\r\n                \"елка\"\r\n            ],\r\n            \"answer_type\": \"text\"\r\n        },\r\n        {\r\n            \"sort\": 2,\r\n            \"description\": \"Step description\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"question_type\": \"text\",\r\n            \"answer_content\": [\r\n                \"tkrf\",\r\n                \"елка\"\r\n            ],\r\n            \"answer_type\": \"text\"\r\n        },\r\n        {\r\n            \"sort\": 3,\r\n            \"description\": \"Step description\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"question_type\": \"text\",\r\n            \"answer_content\": [\r\n                \"tkrf\",\r\n                \"елка\"\r\n            ],\r\n            \"answer_type\": \"text\"\r\n        }\r\n    ]\r\n}",
+							"raw": "{\r\n    \"name\": \"Квест с QR\",\r\n    \"description\": \"Quset for my friend\",\r\n    \"theme\": \"standart\",\r\n    \"final_message\": \"Чувак, спасибо что прошел мой квест! И еще раз с ДР тебя\",\r\n    \"rewards\": [\r\n        {\r\n            \"type\": \"coupon\",\r\n            \"message\": \"Твой купон на Озон\",\r\n            \"value\": \"K$*#HF(!H#\"\r\n        }\r\n    ],\r\n    \"steps\": [\r\n        {\r\n            \"sort\": 1,\r\n            \"description\": \"Step description\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"question_type\": \"text\",\r\n            \"answer_content\": [\r\n                \"tkrf\",\r\n                \"елка\"\r\n            ],\r\n            \"answer_type\": \"text\"\r\n        },\r\n        {\r\n            \"sort\": 2,\r\n            \"description\": \"Step description\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"question_type\": \"qr\",\r\n            \"answer_content\": [\"eль\"],\r\n            \"answer_type\": \"text\"\r\n        },\r\n        {\r\n            \"sort\": 3,\r\n            \"description\": \"Step description\",\r\n            \"question_content\": \"Зимой и летом одним цветом\",\r\n            \"question_type\": \"text\",\r\n            \"answer_content\": [\r\n                \"tkrf\",\r\n                \"елка\"\r\n            ],\r\n            \"answer_type\": \"text\"\r\n        }\r\n    ]\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -829,12 +830,7 @@
 									"type": "file",
 									"src": "/Users/kadamuk/Desktop/png-transparent-spider-man-heroes-download-with-transparent-background-free-thumbnail.png"
 								}
-							],
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
+							]
 						},
 						"url": {
 							"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/media/upload",
@@ -896,12 +892,7 @@
 									"type": "file",
 									"src": "/Users/kadamuk/Desktop/png-transparent-spider-man-heroes-download-with-transparent-background-free-thumbnail.png"
 								}
-							],
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
+							]
 						},
 						"url": {
 							"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/media/{{media_id}}",
@@ -931,14 +922,48 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{scheme}}://{{host}}:{{port}}/health",
+					"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/health",
 					"protocol": "{{scheme}}",
 					"host": [
 						"{{host}}"
 					],
 					"port": "{{port}}",
 					"path": [
+						"api",
+						"v1",
 						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "https://api.us1-mta1.sendclean.net/v1.0/",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "WsKl7fejV3iYbRSZsSLe9asj",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://api.us1-mta1.sendclean.net/v1.0/",
+					"protocol": "https",
+					"host": [
+						"api",
+						"us1-mta1",
+						"sendclean",
+						"net"
+					],
+					"path": [
+						"v1.0",
+						""
 					]
 				}
 			},
