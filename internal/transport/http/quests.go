@@ -389,6 +389,7 @@ func (s *Server) checkAnswer(w http.ResponseWriter, r *http.Request) {
 		if ql.IsLastStep() {
 			ql.QuestStatus = questModel.StatusFinished
 			ql.FinalMessage = q.FinalMessage
+			ql.Rewards = q.Rewards
 			if err = s.quests.UpdateAssignment(ctx, *q.ID, user.Email, ql.CurrentStep(), questModel.StatusFinished); err != nil {
 				logging.From(ctx).Error("failed to start q", zap.Error(err))
 				handleError(ctx, w, err)

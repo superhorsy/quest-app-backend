@@ -83,10 +83,28 @@ type Quest struct {
 	Theme        *Theme      `json:"theme" db:"theme"`
 	Recipients   []Recipient `json:"recipients"`
 	FinalMessage *string     `json:"final_message" db:"final_message"`
+	Rewards      *Rewards    `json:"rewards" db:"rewards"`
 
 	CreatedAt *time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at" db:"updated_at"`
 	DeletedAt *time.Time `json:"deleted_at" db:"deleted_at"`
+}
+
+type Rewards string
+
+func (r *Rewards) MarshalJSON() ([]byte, error) {
+	str := (*string)(r)
+	return []byte(*str), nil
+}
+
+func (r *Rewards) UnmarshalJSON(data []byte) error {
+	if n := len(data); n > 1 && data[0] == '"' && data[n-1] == '"' {
+		return json.Unmarshal(data, (*string)(r))
+	}
+
+	*r = Rewards(data)
+
+	return nil
 }
 
 type Recipient struct {
@@ -152,6 +170,7 @@ type QuestLine struct {
 	QuestStatus             Status      `json:"quest_status"`
 	QuestTheme              Theme       `json:"quest_theme"`
 	FinalMessage            *string     `json:"final_message,omitempty"`
+	Rewards                 *Rewards    `json:"rewards,omitempty"`
 }
 
 type Question struct {
