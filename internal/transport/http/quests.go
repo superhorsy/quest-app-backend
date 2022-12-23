@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/superhorsy/quest-app-backend/internal/core/helpers"
 	questModel "github.com/superhorsy/quest-app-backend/internal/quests/model"
+	"html"
 	"io"
 	"net/http"
 	"os"
@@ -219,12 +220,12 @@ func (s *Server) sendQuest(w http.ResponseWriter, r *http.Request) {
 				URL  string
 				IMG  string
 			}{
-				Name: sendRequest.Name,
+				Name: html.EscapeString(sendRequest.Name),
 				URL:  "https://questy.fun",
 				IMG:  "https://wsrv.nl/?url=questy.fun/files/10d26a38-2fdf-4f48-adff-3e052e7466f5.png",
 			}
 			subject := fmt.Sprintf("Ваш друг %s отправил вам квест на Questy.fun!", user.FullName())
-			err := helpers.SendEmail(sendRequest.Email, subject, "config/quest_invite.html", templateData)
+			err := helpers.SendEmail(sendRequest.Email, subject, "config/quest_invite.gohtml", templateData)
 			if err != nil {
 				logging.From(ctx).Error("failed to send email", zap.Error(err))
 				return
