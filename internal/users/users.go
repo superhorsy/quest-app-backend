@@ -43,6 +43,12 @@ type Users struct {
 	events Events
 }
 
+// Quests provides functionality for CRUD operations on quests.
+type Quests struct {
+	store  Store
+	events Events
+}
+
 func (u *Users) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	user, err := u.store.GetUserByEmail(ctx, email)
 	if err != nil {
@@ -85,6 +91,27 @@ func (u *Users) CreateUser(ctx context.Context, user *model.UserWithPass) (*mode
 	})
 
 	return createdUser, nil
+}
+
+// UpdateUser will try to update an existing user in our database with the provided data.
+func (u *Users) UpdateUser(ctx context.Context, user *model.UserWithPass) (*model.User, error) {
+	if user.Password != nil && *user.Password != "" {
+		passwordHash := helpers.HashAndSalt([]byte(*user.Password))
+		user.Password = &passwordHash
+	}
+
+	updatedUser, err := u.store.UpdateUser(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	u.events.Produce(ctx, events.TopicUsers, events.UserEvent{
+		EventType: events.EventTypeUserUpdated,
+		ID:        *updatedUser.ID,
+		User:      updatedUser,
+	})
+
+	return updatedUser, nil
 }
 
 // GetUser will try to get an existing user in our database with the provided id.
@@ -133,22 +160,6 @@ func (u *Users) FindUsers(ctx context.Context, filters []model.Filter, offset, l
 	}
 
 	return users, nil
-}
-
-// UpdateUser will try to update an existing user in our database with the provided data.
-func (u *Users) UpdateUser(ctx context.Context, user *model.UserWithPass) (*model.User, error) {
-	updatedUser, err := u.store.UpdateUser(ctx, user)
-	if err != nil {
-		return nil, err
-	}
-
-	u.events.Produce(ctx, events.TopicUsers, events.UserEvent{
-		EventType: events.EventTypeUserUpdated,
-		ID:        *updatedUser.ID,
-		User:      updatedUser,
-	})
-
-	return updatedUser, nil
 }
 
 // DeleteUser will try to delete an existing user in our database with the provided id.

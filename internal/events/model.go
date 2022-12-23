@@ -1,6 +1,7 @@
 package events
 
 import (
+	"github.com/superhorsy/quest-app-backend/internal/media/model"
 	questModel "github.com/superhorsy/quest-app-backend/internal/quests/model"
 	userModel "github.com/superhorsy/quest-app-backend/internal/users/model"
 )
@@ -33,4 +34,10 @@ type QuestEvent struct {
 	EventType EventType                  `json:"event_type"`
 	ID        string                     `json:"id"`
 	Quest     *questModel.QuestWithSteps `json:"quest"`
+}
+
+type MediaEvent struct {
+	EventType   EventType          `json:"event_type"`
+	ID          string             `json:"id"`
+	MediaRecord *model.MediaRecord `json:"media_record"`
 }

@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // UserWithPass represents a person using our platform.
 type UserWithPass struct {
@@ -18,6 +21,10 @@ type User struct {
 	Email     *string    `json:"email" db:"email"`
 	CreatedAt *time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at" db:"updated_at"`
+}
+
+func (u *User) FullName() string {
+	return fmt.Sprintf("%s %s", *u.FirstName, *u.LastName)
 }
 
 // Field is an enum providing valid fields for filtering.

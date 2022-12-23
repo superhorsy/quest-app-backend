@@ -39,7 +39,7 @@ type UserWithToken struct {
 
 func validation(values []Validation) error {
 	username := regexp.MustCompile(`^([A-Za-z0-9]{5,})+$`)
-	email := regexp.MustCompile(`^[A-Za-z0-9]+[@]+[A-Za-z0-9]+[.][A-Za-z0-9]+$`)
+	email := regexp.MustCompile(`^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$`)
 
 	for i := 0; i < len(values); i++ {
 		switch values[i].Valid {
@@ -104,14 +104,14 @@ func (s *Server) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := helpers.CreateJwtToken(*createdUser.ID, err)
+	token, err := helpers.CreateJwtToken(*createdUser.ID)
 	if err != nil {
 		logging.From(ctx).Error("failed to create token", zap.Error(err))
 		handleError(ctx, w, err)
 		return
 	}
 
-	handleResponse(ctx, w, createdUser, token)
+	handleResponse(ctx, w, createdUser, *token)
 }
 
 func (s *Server) login(w http.ResponseWriter, r *http.Request) {
@@ -152,12 +152,12 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := helpers.CreateJwtToken(*user.ID, err)
+	token, err := helpers.CreateJwtToken(*user.ID)
 	if err != nil {
 		logging.From(ctx).Error("failed to create token", zap.Error(err))
 		handleError(ctx, w, err)
 		return
 	}
 
-	handleResponse(ctx, w, user, token)
+	handleResponse(ctx, w, user, *token)
 }

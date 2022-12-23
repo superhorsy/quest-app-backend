@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"github.com/superhorsy/quest-app-backend/internal/core/config"
 	"github.com/superhorsy/quest-app-backend/internal/core/helpers"
 	"mime"
 	"net/http"
@@ -35,14 +36,12 @@ func JsonResponse(next http.Handler) http.Handler {
 	})
 }
 
-type ContextKey string
-
-const ContextUserIdKey ContextKey = "userId"
+const ContextUserIdKey config.ContextKey = "userId"
 
 func authHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		auth := r.Header.Get("Authorization")
-		token, err := helpers.ParseToken(auth)
+		authHeader := r.Header.Get("Authorization")
+		token, err := helpers.ParseToken(authHeader)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(err.Error()))

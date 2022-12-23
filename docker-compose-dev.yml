@@ -10,8 +10,11 @@ services:
       - "40000:40000"
     environment:
       - POSTGRES_DSN=postgresql://guest:guest@postgres:5432/quest-app-db?sslmode=disable # Test credentials
-      - ENVIRONMENT=docker
+      - ENVIRONMENT=${ENVIRONMENT:-docker}
+      - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY:-secret-key}
     # debug options
+    env_file:
+      - ./.env
     security_opt:
       - "seccomp:unconfined"
     cap_add:
@@ -19,6 +22,8 @@ services:
     command: /dlv --headless --listen=:40000 --api-version=2 exec ./server
     depends_on:
       - postgres
+    volumes:
+      - ./files:/root/files:consistent
   postgres:
     image: postgres:alpine
     restart: always
@@ -27,7 +32,7 @@ services:
       POSTGRES_PASSWORD: guest
       POSTGRES_DB: quest-app-db
     ports:
-      - "5432:5432"
+      - ${DB_PORT:-5432}:5432
     volumes:
       - pgdata:/var/lib/postgresql/data
 volumes:

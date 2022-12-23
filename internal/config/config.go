@@ -41,13 +41,16 @@ type Config struct {
 func Load(ctx context.Context) (*Config, error) {
 	cfg := &Config{}
 
+	// First load from config/config-*.yaml files
 	if err := loadFromFiles(ctx, cfg); err != nil {
 		return nil, err
 	}
-
+	// Then fill struct with environment values
 	if err := env.Parse(cfg); err != nil {
 		return nil, ErrEnvVars.Wrap(err)
 	}
+
+	logging.From(ctx).Info(fmt.Sprintf("Config: %v.\n", cfg))
 
 	validate := validator.New()
 	if err := validate.Struct(cfg); err != nil {

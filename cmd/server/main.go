@@ -3,14 +3,16 @@ package main
 import (
 	"context"
 	"github.com/cenkalti/backoff/v4"
-	"github.com/superhorsy/quest-app-backend/internal/quests"
-
 	"github.com/superhorsy/quest-app-backend/internal/config"
 	"github.com/superhorsy/quest-app-backend/internal/core/app"
 	"github.com/superhorsy/quest-app-backend/internal/core/drivers/psql"
 	"github.com/superhorsy/quest-app-backend/internal/core/listeners/http"
 	"github.com/superhorsy/quest-app-backend/internal/core/logging"
 	"github.com/superhorsy/quest-app-backend/internal/events"
+	"github.com/superhorsy/quest-app-backend/internal/media"
+	localFileStorage "github.com/superhorsy/quest-app-backend/internal/media/file_storage"
+	mediaRecordStore "github.com/superhorsy/quest-app-backend/internal/media/store"
+	"github.com/superhorsy/quest-app-backend/internal/quests"
 	questStore "github.com/superhorsy/quest-app-backend/internal/quests/store"
 	httptransport "github.com/superhorsy/quest-app-backend/internal/transport/http"
 	"github.com/superhorsy/quest-app-backend/internal/users"
@@ -25,6 +27,9 @@ func main() {
 func appStart(ctx context.Context, a *app.App) ([]app.Listener, error) {
 	// Load configuration from config/config.yaml which contains details such as DB connection params
 	cfg, err := config.Load(ctx)
+	//
+	a.Config = *cfg
+
 	if err != nil {
 		return nil, err
 	}
@@ -40,21 +45,28 @@ func appStart(ctx context.Context, a *app.App) ([]app.Listener, error) {
 		return nil, err
 	}
 	a.OnShutdown(func() {
-		// Temp for development so database is cleared on shutdown
-		if err := db.RevertMigrations(ctx, "file://migrations"); err != nil {
-			logging.From(ctx).Error("failed to revert migrations", zap.Error(err))
+		if cfg.PurgeOnRestart == true {
+			logging.From(ctx).Info("Clearing DB")
+			// Temp for development so database is cleared on shutdown
+			if err := db.RevertMigrations(ctx, "file://migrations"); err != nil {
+				logging.From(ctx).Error("failed to revert migrations", zap.Error(err))
+			}
 		}
-
 	})
 
 	// Instantiate and connect all our classes
 	us := userStore.New(db.GetDB())
 	qs := questStore.New(db.GetDB())
+	// Storage for media records
+	mrs := mediaRecordStore.New(db.GetDB())
+	// Storage for static content
+	mfs := localFileStorage.New()
 	e := events.New()
 	u := users.New(us, e)
 	q := quests.New(qs, e)
+	m := media.New(mrs, mfs, e)
 
-	httpServer := httptransport.New(u, q, db.GetDB())
+	httpServer := httptransport.New(u, q, db.GetDB(), m)
 
 	// Create an HTTP server
 	h, err := http.New(httpServer, cfg.HTTP)

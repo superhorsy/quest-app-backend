@@ -8,8 +8,7 @@ WORKDIR /app
 
 COPY go.mod ./
 COPY go.sum ./
-
-RUN go mod download
+COPY vendor/ ./vendor/
 
 COPY ./cmd/server/main.go ./cmd/server/main.go
 COPY ./internal/ ./internal/
@@ -18,7 +17,7 @@ RUN go build -o ./server ./cmd/server/main.go
 
 # Build the server image
 
-FROM alpine:latest
+FROM alpine:3.17
 
 RUN apk --no-cache add ca-certificates
 

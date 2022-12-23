@@ -66,20 +66,35 @@ func (s *Server) getCurrentUser(w http.ResponseWriter, r *http.Request) {
 	handleResponse(ctx, w, u)
 }
 
-func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
+func (s *Server) updateUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	vars := mux.Vars(r)
-	id := vars["id"]
+	userId := ctx.Value(ContextUserIdKey).(string)
 
-	u, err := s.users.GetUser(ctx, id)
+	u, err := s.users.GetUser(ctx, userId)
 	if err != nil {
 		logging.From(ctx).Error("failed to get user", zap.Error(err))
 		handleError(ctx, w, err)
 		return
 	}
 
-	handleResponse(ctx, w, u)
+	req, err := parseBodyIntoStruct(r, model.UserWithPass{})
+	if err != nil {
+		handleError(ctx, w, err)
+		return
+	}
+	req.ID = &userId
+	// Email can not be changed on profile update
+	req.Email = u.Email
+
+	updateUser, err := s.users.UpdateUser(ctx, req)
+	if err != nil {
+		logging.From(ctx).Error("failed to update user", zap.Error(err))
+		handleError(ctx, w, err)
+		return
+	}
+
+	handleResponse(ctx, w, updateUser)
 }
 
 func (s *Server) searchUsers(w http.ResponseWriter, r *http.Request) {
@@ -108,39 +123,6 @@ func (s *Server) searchUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	handleResponse(ctx, w, users)
-}
-
-func (s *Server) updateUser(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	vars := mux.Vars(r)
-	id := vars["id"]
-
-	data, err := io.ReadAll(r.Body)
-	if err != nil {
-		logging.From(ctx).Error("failed to read request body", zap.Error(err))
-		handleError(ctx, w, errors.ErrUnknown.Wrap(err))
-		return
-	}
-
-	u := model.UserWithPass{}
-
-	if err := json.Unmarshal(data, &u); err != nil {
-		logging.From(ctx).Error("failed to unmarshal json body", zap.Error(err))
-		handleError(ctx, w, errors.ErrInvalidRequest.Wrap(err))
-		return
-	}
-
-	u.ID = &id
-
-	updateUser, err := s.users.UpdateUser(ctx, &u)
-	if err != nil {
-		logging.From(ctx).Error("failed to update user", zap.Error(err))
-		handleError(ctx, w, err)
-		return
-	}
-
-	handleResponse(ctx, w, updateUser)
 }
 
 func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
