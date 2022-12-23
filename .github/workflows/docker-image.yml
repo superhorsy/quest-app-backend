@@ -43,7 +43,7 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           port: ${{ secrets.PORT }}
           script: |
-            /root/quests/backend
+            cd /root/quests/backend
 
             # Pull the Docker Image 
             docker compose pull app
