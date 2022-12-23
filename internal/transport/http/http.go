@@ -99,6 +99,7 @@ func (s *Server) AddRoutes(r *mux.Router) error {
 
 	// Profile
 	api.HandleFunc("/profile", s.getCurrentUser).Methods(http.MethodGet)
+	api.HandleFunc("/profile", s.updateUser).Methods(http.MethodPut)
 	// Quests
 	api.HandleFunc("/quests", s.createQuest).Methods(http.MethodPost)
 	api.HandleFunc("/quests/created", s.getQuestsByUser).Methods(http.MethodGet)

@@ -115,6 +115,56 @@
 					"response": []
 				},
 				{
+					"name": "/profile",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.variables.set(\"password\", CryptoJS.MD5(\"abcdef\").toString());"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n        \"first_name\": \"Alice1\",\n        \"last_name\": \"Bob1\",\n        \"nickname\": \"AB1232111\",\n        \"password\": \"123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/profile",
+							"protocol": "{{scheme}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "/register",
 					"event": [
 						{
@@ -755,7 +805,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/available",
+							"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/quests/available?finished=true",
 							"protocol": "{{scheme}}",
 							"host": [
 								"{{host}}"
@@ -779,6 +829,10 @@
 									"value": "1",
 									"description": "Оффсет, по дефолту - 0",
 									"disabled": true
+								},
+								{
+									"key": "finished",
+									"value": "true"
 								}
 							]
 						}
@@ -932,38 +986,6 @@
 						"api",
 						"v1",
 						"health"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "https://api.us1-mta1.sendclean.net/v1.0/",
-			"request": {
-				"auth": {
-					"type": "bearer",
-					"bearer": [
-						{
-							"key": "token",
-							"value": "WsKl7fejV3iYbRSZsSLe9asj",
-							"type": "string"
-						}
-					]
-				},
-				"method": "POST",
-				"header": [],
-				"url": {
-					"raw": "https://api.us1-mta1.sendclean.net/v1.0/",
-					"protocol": "https",
-					"host": [
-						"api",
-						"us1-mta1",
-						"sendclean",
-						"net"
-					],
-					"path": [
-						"v1.0",
-						""
 					]
 				}
 			},
