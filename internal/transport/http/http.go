@@ -34,7 +34,7 @@ type Quests interface {
 	GetQuest(ctx context.Context, id string) (*questModel.QuestWithSteps, error)
 	UpdateQuest(ctx context.Context, quest *questModel.QuestWithSteps) (*questModel.QuestWithSteps, error)
 	GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]questModel.Quest, *questModel.Meta, error)
-	GetQuestsAvailable(ctx context.Context, email string, offset int, limit int) ([]questModel.QuestAvailable, *questModel.Meta, error)
+	GetQuestsAvailable(ctx context.Context, email string, offset int, limit int, finished bool) ([]questModel.QuestAvailable, *questModel.Meta, error)
 	DeleteQuest(ctx context.Context, id string) error
 	CreateAssignment(ctx context.Context, request questModel.SendQuestRequest) error
 	GetAssignment(ctx context.Context, questId string, email *string) (*questModel.Assignment, error)

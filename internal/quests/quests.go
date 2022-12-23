@@ -17,7 +17,7 @@ type Store interface {
 	GetQuestsByUser(ctx context.Context, uuid string, offset int, limit int) ([]model.Quest, *model.Meta, error)
 	UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error)
 	DeleteQuest(ctx context.Context, id string) error
-	GetQuestsAvailable(ctx context.Context, uuid string, offset int, limit int) ([]model.QuestAvailable, *model.Meta, error)
+	GetQuestsAvailable(ctx context.Context, email string, offset int, limit int, finished bool) ([]model.QuestAvailable, *model.Meta, error)
 	CreateAssignment(ctx context.Context, request model.SendQuestRequest) error
 	GetAssignment(ctx context.Context, id string, email *string) (*model.Assignment, error)
 	UpdateAssignment(ctx context.Context, questId string, email *string, currentStep int, status model.Status) error
@@ -138,8 +138,8 @@ func (q *Quests) DeleteQuest(ctx context.Context, id string) error {
 	return nil
 }
 
-func (q *Quests) GetQuestsAvailable(ctx context.Context, email string, offset int, limit int) ([]model.QuestAvailable, *model.Meta, error) {
-	list, meta, err := q.store.GetQuestsAvailable(ctx, email, offset, limit)
+func (q *Quests) GetQuestsAvailable(ctx context.Context, email string, offset int, limit int, finished bool) ([]model.QuestAvailable, *model.Meta, error) {
+	list, meta, err := q.store.GetQuestsAvailable(ctx, email, offset, limit, finished)
 	if err != nil {
 		return nil, nil, err
 	}

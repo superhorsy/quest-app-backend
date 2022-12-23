@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/superhorsy/quest-app-backend/internal/core/logging"
 	"github.com/superhorsy/quest-app-backend/internal/transport/http"
 	"go.uber.org/zap"
@@ -296,8 +297,12 @@ func (s *Store) DeleteQuest(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *Store) GetQuestsAvailable(ctx context.Context, email string, offset int, limit int) ([]model.QuestAvailable, *model.Meta, error) {
-	const query = `SELECT qe.quest_id,
+func (s *Store) GetQuestsAvailable(ctx context.Context, email string, offset int, limit int, finished bool) ([]model.QuestAvailable, *model.Meta, error) {
+	statusWhere := fmt.Sprintf("qe.status IN ('%s','%s')", model.StatusNotStarted, model.StatusInProgress)
+	if finished {
+		statusWhere = fmt.Sprintf("qe.status = '%s'", model.StatusFinished)
+	}
+	query := fmt.Sprintf(`SELECT qe.quest_id,
        q.name as quest_name,
        q.description as quest_description,
        q.theme as quest_theme,
@@ -311,9 +316,9 @@ FROM quests q
          JOIN users u ON q.owner = u.id
          FULL OUTER JOIN (SELECT DISTINCT steps.quest_id, COUNT(*) AS steps_count
                            FROM steps GROUP BY steps.quest_id) as s ON qe.quest_id = s.quest_id
-WHERE qe.email = $1
+WHERE qe.email = $1 AND %s
 ORDER BY q.created_at ASC
-OFFSET $2 LIMIT $3`
+OFFSET $2 LIMIT $3`, statusWhere)
 
 	var quests []model.QuestAvailable
 	err := s.db.SelectContext(ctx, &quests, query, email, offset, limit)
@@ -329,11 +334,11 @@ OFFSET $2 LIMIT $3`
 		FROM quests q
     	JOIN quest_to_email qe ON qe.quest_id = q.id
     	JOIN users u ON q.owner = u.id
-		WHERE qe.email = $1`
+		WHERE qe.email = $1 AND %s`
 
 	var meta model.Meta
 
-	err = s.db.GetContext(ctx, &meta, countQuery, email)
+	err = s.db.GetContext(ctx, &meta, fmt.Sprintf(countQuery, statusWhere), email)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

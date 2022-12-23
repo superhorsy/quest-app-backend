@@ -128,7 +128,19 @@ func (s *Server) getAvailableQuests(w http.ResponseWriter, r *http.Request) {
 		offset, err = strconv.Atoi(offsetQueryParam)
 		if err != nil {
 			logging.From(ctx).Error("failed to read request body", zap.Error(err))
-			handleError(ctx, w, errors.ErrUnknown.Wrap(err))
+			handleError(ctx, w, errors.ErrInvalidRequest.Wrap(err))
+			return
+		}
+	}
+
+	finished := false
+	finishedQueryParam := r.URL.Query().Get("finished")
+	if finishedQueryParam != "" {
+		var err error
+		finished, err = strconv.ParseBool(finishedQueryParam)
+		if err != nil {
+			logging.From(ctx).Error("failed to read request body", zap.Error(err))
+			handleError(ctx, w, errors.ErrInvalidRequest.Wrap(err))
 			return
 		}
 	}
@@ -140,7 +152,7 @@ func (s *Server) getAvailableQuests(w http.ResponseWriter, r *http.Request) {
 		handleError(ctx, w, err)
 		return
 	}
-	quests, meta, err := s.quests.GetQuestsAvailable(ctx, *user.Email, offset, limit)
+	quests, meta, err := s.quests.GetQuestsAvailable(ctx, *user.Email, offset, limit, finished)
 	if err != nil {
 		logging.From(ctx).Error("failed to fetch quests", zap.Error(err))
 		handleError(ctx, w, err)
