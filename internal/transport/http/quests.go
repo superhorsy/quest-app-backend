@@ -168,7 +168,8 @@ func (s *Server) deleteQuest(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	if err := s.quests.DeleteQuest(ctx, id); err != nil {
+	err := s.quests.DeleteQuest(ctx, id)
+	if err != nil {
 		logging.From(ctx).Error("failed to delete quest", zap.Error(err))
 		handleError(ctx, w, err)
 		return

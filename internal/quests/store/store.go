@@ -206,12 +206,12 @@ func (s *Store) UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*
 
 	res, err := s.db.NamedQueryContext(ctx, `UPDATE quests SET "name" = :name, description = :description, 
                   theme = :theme, final_message = :final_message, rewards = :rewards, updated_at = :updated_at 
-			WHERE id = :id AND "owner" = :owner RETURNING *`, quest)
+			WHERE id = :id RETURNING *`, quest)
 	if err = checkWriteError(err); err != nil {
 		return nil, err
 	}
 	if !res.Next() {
-		return nil, errors.ErrUnknown
+		return nil, errors.ErrNotFound
 	}
 	defer res.Close()
 

@@ -2,12 +2,16 @@ package quests
 
 import (
 	"context"
-	"fmt"
 	"github.com/superhorsy/quest-app-backend/internal/core/errors"
 	"github.com/superhorsy/quest-app-backend/internal/events"
 	"github.com/superhorsy/quest-app-backend/internal/quests/model"
 	questStore "github.com/superhorsy/quest-app-backend/internal/quests/store"
 	"github.com/superhorsy/quest-app-backend/internal/transport/http"
+)
+
+const (
+	// ErrNotAuthorized is when user is not authorized to get/modify quest.
+	ErrNotAuthorized = errors.Error("Пользователь не имеет доступа к квесту")
 )
 
 // Store represents a type for storing a user in a database.
@@ -35,30 +39,27 @@ type Quests struct {
 }
 
 func (q *Quests) CreateAssignment(ctx context.Context, request model.SendQuestRequest) error {
-	err := q.store.CreateAssignment(ctx, request)
+	_, err := q.getQuestWithAuthCheck(ctx, request.QuestId)
 	if err != nil {
 		return err
 	}
-
-	return nil
+	return q.store.CreateAssignment(ctx, request)
 }
 
 func (q *Quests) GetAssignment(ctx context.Context, questId string, email *string) (*model.Assignment, error) {
-	ass, err := q.store.GetAssignment(ctx, questId, email)
+	_, err := q.getQuestWithAuthCheck(ctx, questId)
 	if err != nil {
 		return nil, err
 	}
-
-	return ass, nil
+	return q.store.GetAssignment(ctx, questId, email)
 }
 
 func (q *Quests) UpdateAssignment(ctx context.Context, questId string, email *string, currentStep int, status model.Status) error {
-	err := q.store.UpdateAssignment(ctx, questId, email, currentStep, status)
+	_, err := q.getQuestWithAuthCheck(ctx, questId)
 	if err != nil {
 		return err
 	}
-
-	return nil
+	return q.store.UpdateAssignment(ctx, questId, email, currentStep, status)
 }
 
 func New(s *questStore.Store, e Events) *Quests {
@@ -73,6 +74,7 @@ func (q *Quests) CreateQuest(ctx context.Context, quest *model.QuestWithSteps) (
 	if err != nil {
 		return nil, err
 	}
+
 	q.events.Produce(ctx, events.TopicQuests, events.QuestEvent{
 		EventType: events.EventTypeUserCreated,
 		ID:        *createdQuest.ID,
@@ -82,55 +84,51 @@ func (q *Quests) CreateQuest(ctx context.Context, quest *model.QuestWithSteps) (
 	return createdQuest, nil
 }
 
-func (q *Quests) GetQuest(ctx context.Context, id string) (*model.QuestWithSteps, error) {
+func (q *Quests) getQuestWithAuthCheck(ctx context.Context, id string) (*model.QuestWithSteps, error) {
 	quest, err := q.store.GetQuest(ctx, id)
-
 	if err != nil {
-		return nil, err
+		return &model.QuestWithSteps{}, err
+	}
+	uId := ctx.Value(http.ContextUserIdKey).(string)
+	if *quest.Owner != uId {
+		return nil, ErrNotAuthorized
 	}
 	return quest, nil
 }
 
+func (q *Quests) GetQuest(ctx context.Context, id string) (*model.QuestWithSteps, error) {
+	return q.getQuestWithAuthCheck(ctx, id)
+}
+
 // UpdateQuest updates quests. If there were any steps inside it deletes them and insert new regardless of already created steps
 func (q *Quests) UpdateQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error) {
-	uId := ctx.Value(http.ContextUserIdKey).(string)
-	storedQuest, err := q.store.GetQuest(ctx, *quest.ID)
+	_, err := q.getQuestWithAuthCheck(ctx, *quest.ID)
 	if err != nil {
 		return nil, err
 	}
-	if *storedQuest.Owner != uId {
-		return nil, errors.New(fmt.Sprintf("Bad owner ID %s for quest %s", *quest.Owner, *quest.ID))
-	}
-	quest.Owner = storedQuest.Owner
-	createdQuest, err := q.store.UpdateQuest(ctx, quest)
+	quest, err = q.store.UpdateQuest(ctx, quest)
 	if err != nil {
 		return nil, err
 	}
 	q.events.Produce(ctx, events.TopicQuests, events.QuestEvent{
 		EventType: events.EventTypeQuestUpdated,
-		ID:        *createdQuest.ID,
-		Quest:     createdQuest,
+		ID:        *quest.ID,
+		Quest:     quest,
 	})
-
-	return createdQuest, nil
-}
-
-func (q *Quests) GetQuestsByUser(ctx context.Context, ownerUuid string, offset int, limit int) ([]model.Quest, *model.Meta, error) {
-	quests, meta, err := q.store.GetQuestsByUser(ctx, ownerUuid, offset, limit)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return quests, meta, nil
+	return quest, nil
 }
 
 func (q *Quests) DeleteQuest(ctx context.Context, id string) error {
-	err := q.store.DeleteQuest(ctx, id)
+	_, err := q.getQuestWithAuthCheck(ctx, id)
+	if err != nil {
+		return err
+	}
+	err = q.store.DeleteQuest(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	q.events.Produce(ctx, events.TopicUsers, events.UserEvent{
+	q.events.Produce(ctx, events.TopicQuests, events.QuestEvent{
 		EventType: events.EventTypeQuestDeleted,
 		ID:        id,
 	})
@@ -138,10 +136,10 @@ func (q *Quests) DeleteQuest(ctx context.Context, id string) error {
 	return nil
 }
 
+func (q *Quests) GetQuestsByUser(ctx context.Context, ownerUuid string, offset int, limit int) ([]model.Quest, *model.Meta, error) {
+	return q.store.GetQuestsByUser(ctx, ownerUuid, offset, limit)
+}
+
 func (q *Quests) GetQuestsAvailable(ctx context.Context, email string, offset int, limit int, finished bool) ([]model.QuestAvailable, *model.Meta, error) {
-	list, meta, err := q.store.GetQuestsAvailable(ctx, email, offset, limit, finished)
-	if err != nil {
-		return nil, nil, err
-	}
-	return list, meta, nil
+	return q.store.GetQuestsAvailable(ctx, email, offset, limit, finished)
 }
