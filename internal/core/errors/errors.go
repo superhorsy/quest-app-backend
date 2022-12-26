@@ -15,7 +15,8 @@ const (
 	// ErrValidation is returned when the parameters don't pass validation.
 	ErrValidation = Error("err_validation: failed validation")
 	// ErrNotFound is returned when the requested resource is not found.
-	ErrNotFound = Error("Не найдено")
+	ErrNotFound  = Error("Не найдено")
+	ErrForbidden = Error("Ошибка доступа")
 )
 
 // ErrSeperator is used to determine the boundaries of the errors in the hierarchy.

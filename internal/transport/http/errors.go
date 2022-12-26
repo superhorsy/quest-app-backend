@@ -25,6 +25,8 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error) {
 		w.WriteHeader(http.StatusBadRequest)
 	case errors.Is(err, errors.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound)
+	case errors.Is(err, errors.ErrForbidden):
+		w.WriteHeader(http.StatusForbidden)
 	case errors.Is(err, errors.ErrUnknown):
 		fallthrough
 	default:

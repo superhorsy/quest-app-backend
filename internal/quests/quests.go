@@ -9,11 +9,6 @@ import (
 	"github.com/superhorsy/quest-app-backend/internal/transport/http"
 )
 
-const (
-	// ErrNotAuthorized is when user is not authorized to get/modify quest.
-	ErrNotAuthorized = errors.Error("Пользователь не имеет доступа к квесту")
-)
-
 // Store represents a type for storing a user in a database.
 type Store interface {
 	InsertQuest(ctx context.Context, quest *model.QuestWithSteps) (*model.QuestWithSteps, error)
@@ -91,7 +86,7 @@ func (q *Quests) getQuestWithAuthCheck(ctx context.Context, id string) (*model.Q
 	}
 	uId := ctx.Value(http.ContextUserIdKey).(string)
 	if *quest.Owner != uId {
-		return nil, ErrNotAuthorized
+		return nil, errors.ErrForbidden.Wrap(errors.Error("Пользователь не имеет доступа к квесту"))
 	}
 	return quest, nil
 }
