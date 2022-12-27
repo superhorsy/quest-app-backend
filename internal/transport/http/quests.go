@@ -4,18 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/superhorsy/quest-app-backend/internal/core/errors"
 	"github.com/superhorsy/quest-app-backend/internal/core/helpers"
+	"github.com/superhorsy/quest-app-backend/internal/core/logging"
 	questModel "github.com/superhorsy/quest-app-backend/internal/quests/model"
+	"go.uber.org/zap"
 	"html"
 	"io"
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
-
-	"github.com/superhorsy/quest-app-backend/internal/core/errors"
-	"github.com/superhorsy/quest-app-backend/internal/core/logging"
-	"go.uber.org/zap"
 )
 
 func (s *Server) createQuest(w http.ResponseWriter, r *http.Request) {
@@ -279,56 +277,12 @@ func (s *Server) updateQuest(w http.ResponseWriter, r *http.Request) {
 func (s *Server) startQuest(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	vars := mux.Vars(r)
-	id := vars["id"]
+	questId := mux.Vars(r)["id"]
 
-	q, err := s.quests.GetQuest(ctx, id)
+	userId := ctx.Value(ContextUserIdKey).(string)
+
+	ql, err := s.quests.StartQuest(ctx, questId, &userId)
 	if err != nil {
-		logging.From(ctx).Error("failed to start q", zap.Error(err))
-		handleError(ctx, w, err)
-		return
-	}
-
-	// Check if q has any steps
-	if len(q.Steps) == 0 {
-		err = errors.ErrValidation.Wrap(errors.Error("can't start q: no steps found inside a q"))
-		logging.From(ctx).Error(err.Error(), zap.Error(err))
-		handleError(ctx, w, err)
-		return
-	}
-	// Check if q is already started
-	userId := ctx.Value(ContextUserIdKey)
-	user, err := s.users.GetUser(ctx, userId.(string))
-	if err != nil {
-		logging.From(ctx).Error("failed to find user", zap.Error(err))
-		handleError(ctx, w, err)
-		return
-	}
-
-	ass, err := s.quests.GetAssignment(ctx, *q.ID, user.Email)
-	if err != nil {
-		logging.From(ctx).Error("failed to find assignment", zap.Error(err))
-		handleError(ctx, w, err)
-		return
-	}
-	if ass.Status == questModel.StatusInProgress {
-		err = errors.New("quest already started")
-		logging.From(ctx).Error("failed to start quest", zap.Error(err))
-		handleError(ctx, w, err)
-		return
-	}
-	if ass.Status == questModel.StatusFinished {
-		err = errors.New("quest already finished")
-		logging.From(ctx).Error("failed to start quest", zap.Error(err))
-		handleError(ctx, w, err)
-		return
-	}
-
-	// Create linked list from steps
-	ql := q.NewQuestLine(nil, questModel.StatusInProgress)
-
-	// Save to DB
-	if err := s.quests.UpdateAssignment(ctx, *q.ID, user.Email, *ql.List.Head.Value.Sort, questModel.StatusInProgress); err != nil {
 		logging.From(ctx).Error("failed to start quest", zap.Error(err))
 		handleError(ctx, w, err)
 		return
@@ -339,89 +293,20 @@ func (s *Server) startQuest(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) checkAnswer(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
-	vars := mux.Vars(r)
-	id := vars["id"]
-
-	q, err := s.quests.GetQuest(ctx, id)
+	questId := mux.Vars(r)["id"]
+	userId := ctx.Value(ContextUserIdKey).(string)
+	answer, err := parseBodyIntoStruct(r, questModel.Answer{})
 	if err != nil {
-		logging.From(ctx).Error("failed to start q", zap.Error(err))
 		handleError(ctx, w, err)
 		return
 	}
 
-	// Check if q has any steps
-	if len(q.Steps) == 0 {
-		err = errors.ErrValidation.Wrap(errors.Error("can't start quest: no steps found inside a quest"))
-		logging.From(ctx).Error(err.Error(), zap.Error(err))
-		handleError(ctx, w, err)
-		return
-	}
-	// Check if q is in progress
-	userId := ctx.Value(ContextUserIdKey)
-	user, err := s.users.GetUser(ctx, userId.(string))
+	ql, err := s.quests.CheckAnswer(ctx, questId, &userId, answer)
 	if err != nil {
-		logging.From(ctx).Error("failed to find user", zap.Error(err))
-		handleError(ctx, w, err)
-		return
-	}
-
-	ass, err := s.quests.GetAssignment(ctx, *q.ID, user.Email)
-	if err != nil {
-		logging.From(ctx).Error("failed to find assignment", zap.Error(err))
-		handleError(ctx, w, err)
-		return
-	}
-
-	if ass.Status == questModel.StatusNotStarted {
-		err = errors.New("quest not started")
 		logging.From(ctx).Error("failed to check answer", zap.Error(err))
 		handleError(ctx, w, err)
 		return
 	}
-
-	if ass.Status == questModel.StatusFinished {
-		err = errors.New("quest finished")
-		logging.From(ctx).Error("failed to check answer", zap.Error(err))
-		handleError(ctx, w, err)
-		return
-	}
-
-	// Create linked list from steps
-	ql := q.NewQuestLine(&ass.CurrentStep, ass.Status)
-
-	req, err := parseBodyIntoStruct(r, questModel.CheckAnswerRequest{})
-	if err != nil {
-		handleError(ctx, w, err)
-		return
-	}
-
-	isCorrect, err := checkIfAnswerCorrect(*req, ql.List.Head.Value)
-
-	if isCorrect {
-		// If it was last one
-		if ql.IsLastStep() {
-			ql.QuestStatus = questModel.StatusFinished
-			ql.FinalMessage = q.FinalMessage
-			ql.Rewards = q.Rewards
-			if err = s.quests.UpdateAssignment(ctx, *q.ID, user.Email, ql.CurrentStep(), questModel.StatusFinished); err != nil {
-				logging.From(ctx).Error("failed to start q", zap.Error(err))
-				handleError(ctx, w, err)
-				return
-			}
-		} else {
-			// Switch to next question
-			ql.Next()
-			// Save to DB
-			if err = s.quests.UpdateAssignment(ctx, *q.ID, user.Email, ql.CurrentStep(), questModel.StatusInProgress); err != nil {
-				logging.From(ctx).Error("failed to start q", zap.Error(err))
-				handleError(ctx, w, err)
-				return
-			}
-		}
-	}
-
-	ql.IsQuestionAnswerCorrect = &isCorrect
 
 	handleResponse(ctx, w, ql)
 }
@@ -429,51 +314,13 @@ func (s *Server) checkAnswer(w http.ResponseWriter, r *http.Request) {
 func (s *Server) status(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	vars := mux.Vars(r)
-	id := vars["id"]
+	questId := mux.Vars(r)["id"]
 
-	q, err := s.quests.GetQuest(ctx, id)
+	ql, err := s.quests.GetAssignment(ctx, questId)
 	if err != nil {
-		logging.From(ctx).Error("failed to start q", zap.Error(err))
 		handleError(ctx, w, err)
 		return
 	}
-
-	// Check if q has any steps
-	if len(q.Steps) == 0 {
-		err = errors.ErrValidation.Wrap(errors.Error("can't get quest status: no steps found inside a quest"))
-		logging.From(ctx).Error(err.Error(), zap.Error(err))
-		handleError(ctx, w, err)
-		return
-	}
-	// Check if q is in progress
-	userId := ctx.Value(ContextUserIdKey)
-	user, err := s.users.GetUser(ctx, userId.(string))
-	if err != nil {
-		logging.From(ctx).Error("failed to find user", zap.Error(err))
-		handleError(ctx, w, err)
-		return
-	}
-
-	ass, err := s.quests.GetAssignment(ctx, *q.ID, user.Email)
-	if err != nil {
-		logging.From(ctx).Error("failed to find assignment", zap.Error(err))
-		handleError(ctx, w, err)
-		return
-	}
-
-	// Create linked list from steps
-	ql := q.NewQuestLine(&ass.CurrentStep, ass.Status)
 
 	handleResponse(ctx, w, ql)
-}
-
-func checkIfAnswerCorrect(req questModel.CheckAnswerRequest, q questModel.Question) (bool, error) {
-	answer := req.Answer
-	for _, correctAnswer := range *q.AnswerContent {
-		if strings.TrimSpace(strings.ToLower(answer)) == strings.TrimSpace(strings.ToLower(correctAnswer)) {
-			return true, nil
-		}
-	}
-	return false, nil
 }

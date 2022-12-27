@@ -18,8 +18,8 @@ type Store interface {
 	DeleteQuest(ctx context.Context, id string) error
 	GetQuestsAvailable(ctx context.Context, email string, offset int, limit int, finished bool) ([]model.QuestAvailable, *model.Meta, error)
 	CreateAssignment(ctx context.Context, request model.SendQuestRequest) error
-	GetAssignment(ctx context.Context, id string, email *string) (*model.Assignment, error)
-	UpdateAssignment(ctx context.Context, questId string, email *string, currentStep int, status model.Status) error
+	GetAssignment(ctx context.Context, questId string, userId string) (*model.Assignment, error)
+	UpdateAssignment(ctx context.Context, questId string, userId *string, currentStep int, status model.Status) error
 }
 
 // Events represents a type for producing events on user CRUD operations.
@@ -41,20 +41,92 @@ func (q *Quests) CreateAssignment(ctx context.Context, request model.SendQuestRe
 	return q.store.CreateAssignment(ctx, request)
 }
 
-func (q *Quests) GetAssignment(ctx context.Context, questId string, email *string) (*model.Assignment, error) {
-	_, err := q.getQuestWithAuthCheck(ctx, questId)
+func (q *Quests) GetAssignment(ctx context.Context, questId string) (*model.QuestLine, error) {
+	quest, err := q.store.GetQuest(ctx, questId)
 	if err != nil {
 		return nil, err
 	}
-	return q.store.GetAssignment(ctx, questId, email)
+	// Check if q has any steps
+	if len(quest.Steps) == 0 {
+		return nil, errors.ErrValidation.Wrap(errors.Error("can't get quest status: no steps found inside a quest"))
+	}
+	userId := ctx.Value(http.ContextUserIdKey).(string)
+	ass, err := q.store.GetAssignment(ctx, questId, userId)
+	if err != nil {
+		return nil, err
+	}
+	return quest.NewQuestLine(&ass.CurrentStep, ass.Status), err
 }
 
-func (q *Quests) UpdateAssignment(ctx context.Context, questId string, email *string, currentStep int, status model.Status) error {
-	_, err := q.getQuestWithAuthCheck(ctx, questId)
+func (q *Quests) StartQuest(ctx context.Context, questId string, userId *string) (*model.QuestLine, error) {
+	quest, err := q.store.GetQuest(ctx, questId)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return q.store.UpdateAssignment(ctx, questId, email, currentStep, status)
+
+	// Check if q has any steps
+	if len(quest.Steps) == 0 {
+		return nil, errors.ErrValidation.Wrap(errors.Error("can't start q: no steps found inside a q"))
+	}
+
+	ass, err := q.store.GetAssignment(ctx, questId, *userId)
+	if err != nil {
+		return nil, err
+	}
+	if ass.Status == model.StatusInProgress {
+		return nil, errors.New("quest already started")
+	}
+	if ass.Status == model.StatusFinished {
+		return nil, errors.New("quest already finished")
+	}
+
+	// Create linked list from steps
+	ql := quest.NewQuestLine(nil, model.StatusInProgress)
+
+	// Save to DB
+	err = q.store.UpdateAssignment(ctx, questId, userId, *ql.List.Head.Value.Sort, model.StatusInProgress)
+
+	return ql, err
+}
+func (q *Quests) CheckAnswer(ctx context.Context, questId string, userId *string, answer *model.Answer) (*model.QuestLine, error) {
+	quest, err := q.store.GetQuest(ctx, questId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if q has any steps
+	if len(quest.Steps) == 0 {
+		return nil, errors.ErrValidation.Wrap(errors.Error("can't start q: no steps found inside a q"))
+	}
+
+	ass, err := q.store.GetAssignment(ctx, questId, *userId)
+	if err != nil {
+		return nil, err
+	}
+	if ass.Status != model.StatusInProgress {
+		return nil, errors.New("quest not in progress")
+	}
+
+	// Create linked list from steps
+	ql := quest.NewQuestLine(&ass.CurrentStep, ass.Status)
+	isCorrect := ql.CheckIfAnswerCorrect(*answer)
+	ql.IsQuestionAnswerCorrect = &isCorrect
+
+	if !isCorrect {
+		return ql, nil
+	}
+
+	if !ql.IsLastStep() {
+		// Switch to next question
+		ql.Next()
+	} else {
+		// If it was last one
+		ql.QuestStatus = model.StatusFinished
+		ql.FinalMessage = quest.FinalMessage
+		ql.Rewards = quest.Rewards
+	}
+
+	return ql, q.store.UpdateAssignment(ctx, questId, userId, ql.CurrentStep(), ql.QuestStatus)
 }
 
 func New(s *questStore.Store, e Events) *Quests {

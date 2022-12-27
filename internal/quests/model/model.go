@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/superhorsy/quest-app-backend/internal/core/errors"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -157,20 +158,35 @@ type SendQuestRequest struct {
 	Name    string `json:"name" db:"name"`
 }
 
-type CheckAnswerRequest struct {
+type Answer struct {
 	AnswerType AnswerType `json:"answer_type"`
 	Answer     string     `json:"answer"`
 }
 
 type QuestLine struct {
-	IsQuestionAnswerCorrect *bool       `json:"success,omitempty"`
-	List                    *LinkedList `json:"current"`
-	PreviousQuestions       []Question  `json:"previous"`
-	QuestionCount           int         `json:"question_count"`
-	QuestStatus             Status      `json:"quest_status"`
-	QuestTheme              Theme       `json:"quest_theme"`
-	FinalMessage            *string     `json:"final_message,omitempty"`
-	Rewards                 *Rewards    `json:"rewards,omitempty"`
+	QuestId          string `json:"quest_id"`
+	QuestName        string `json:"quest_name"`
+	QuestDescription string `json:"quest_description"`
+	QuestTheme       Theme  `json:"quest_theme"`
+	QuestStatus      Status `json:"quest_status"`
+	QuestionCount    int    `json:"question_count"`
+
+	IsQuestionAnswerCorrect *bool `json:"success,omitempty"`
+
+	List              *LinkedList `json:"current"`
+	PreviousQuestions []Question  `json:"previous"`
+
+	FinalMessage *string  `json:"final_message,omitempty"`
+	Rewards      *Rewards `json:"rewards,omitempty"`
+}
+
+func (ql *QuestLine) CheckIfAnswerCorrect(answer Answer) bool {
+	for _, correctAnswer := range *ql.List.Head.Value.AnswerContent {
+		if strings.TrimSpace(strings.ToLower(answer.Answer)) == strings.TrimSpace(strings.ToLower(correctAnswer)) {
+			return true
+		}
+	}
+	return false
 }
 
 type Question struct {
@@ -220,9 +236,14 @@ func (q QuestWithSteps) NewQuestLine(currentStep *int, status Status) *QuestLine
 		}
 	}
 	ql.List = &ll
-	ql.QuestionCount = len(steps)
+
+	ql.QuestId = *q.ID
+	ql.QuestName = *q.Name
+	ql.QuestDescription = *q.Description
 	ql.QuestStatus = status
 	ql.QuestTheme = *q.Theme
+	ql.QuestionCount = len(steps)
+
 	return ql
 }
 

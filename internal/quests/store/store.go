@@ -260,9 +260,30 @@ func (s *Store) CreateAssignment(ctx context.Context, request model.SendQuestReq
 	return nil
 }
 
-func (s *Store) UpdateAssignment(ctx context.Context, questId string, email *string, currentStep int, status model.Status) error {
-	res, err := s.db.QueryxContext(ctx, `UPDATE quest_to_email SET "status" = $1, "current_step" = $2 WHERE quest_id = $3 and email = $4`,
-		status, currentStep, questId, email)
+func (s *Store) GetAssignment(ctx context.Context, questId string, userId string) (*model.Assignment, error) {
+	var a model.Assignment
+
+	if err := s.db.GetContext(ctx, &a, "SELECT qe.* FROM quest_to_email qe JOIN users u ON u.email = qe.email WHERE qe.quest_id = $1 AND u.id = $2", questId, userId); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.ErrNotFound.Wrap(err)
+		}
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			if pqErr.Code.Name() == pqErrInvalidTextRepresentation && strings.Contains(pqErr.Error(), "uuid") {
+				return nil, ErrInvalidID.Wrap(errors.ErrValidation.Wrap(err))
+			}
+		}
+
+		return nil, errors.ErrUnknown.Wrap(err)
+	}
+	return &a, nil
+}
+
+func (s *Store) UpdateAssignment(ctx context.Context, questId string, userId *string, currentStep int, status model.Status) error {
+	res, err := s.db.QueryxContext(ctx,
+		`UPDATE quest_to_email SET "status" = $1, "current_step" = $2 
+          FROM quest_to_email qe JOIN users u ON u.email = qe.email 
+          WHERE qe.quest_id = $3 and u.id = $4`, status, currentStep, questId, userId)
 	if err = checkWriteError(err); err != nil {
 		return err
 	}
@@ -349,25 +370,6 @@ OFFSET $2 LIMIT $3`, statusWhere)
 	}
 
 	return quests, &meta, nil
-}
-
-func (s *Store) GetAssignment(ctx context.Context, questId string, email *string) (*model.Assignment, error) {
-	var a model.Assignment
-
-	if err := s.db.GetContext(ctx, &a, "SELECT * FROM quest_to_email WHERE quest_id = $1 AND email = $2", questId, email); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.ErrNotFound.Wrap(err)
-		}
-		var pqErr *pq.Error
-		if errors.As(err, &pqErr) {
-			if pqErr.Code.Name() == pqErrInvalidTextRepresentation && strings.Contains(pqErr.Error(), "uuid") {
-				return nil, ErrInvalidID.Wrap(errors.ErrValidation.Wrap(err))
-			}
-		}
-
-		return nil, errors.ErrUnknown.Wrap(err)
-	}
-	return &a, nil
 }
 
 // Private methods

@@ -37,8 +37,9 @@ type Quests interface {
 	GetQuestsAvailable(ctx context.Context, email string, offset int, limit int, finished bool) ([]questModel.QuestAvailable, *questModel.Meta, error)
 	DeleteQuest(ctx context.Context, id string) error
 	CreateAssignment(ctx context.Context, request questModel.SendQuestRequest) error
-	GetAssignment(ctx context.Context, questId string, email *string) (*questModel.Assignment, error)
-	UpdateAssignment(ctx context.Context, questId string, email *string, currentStep int, status questModel.Status) error
+	GetAssignment(ctx context.Context, questId string) (*questModel.QuestLine, error)
+	StartQuest(ctx context.Context, questId string, userId *string) (*questModel.QuestLine, error)
+	CheckAnswer(ctx context.Context, questId string, userId *string, answer *questModel.Answer) (*questModel.QuestLine, error)
 }
 
 type Media interface {
