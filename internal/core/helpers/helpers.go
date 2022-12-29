@@ -1,7 +1,9 @@
 package helpers
 
 import (
+	"context"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/superhorsy/quest-app-backend/internal/core/config"
 	"github.com/superhorsy/quest-app-backend/internal/core/errors"
 	"golang.org/x/crypto/bcrypt"
 	"os"
@@ -61,4 +63,8 @@ func SliceContains[K comparable](s []K, e K) bool {
 		}
 	}
 	return false
+}
+
+func GetConfig(ctx context.Context) config.AppConfig {
+	return *ctx.Value("config").(*config.AppConfig)
 }

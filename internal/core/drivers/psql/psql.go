@@ -34,7 +34,7 @@ func New(cfg Config) *Driver {
 }
 
 // Connect connects to the database.
-func (d *Driver) Connect(ctx context.Context) error {
+func (d *Driver) Connect(_ context.Context) error {
 	db, err := sqlx.Connect("postgres", d.cfg.DSN)
 	if err != nil {
 		return ErrConnect.Wrap(err)
@@ -46,7 +46,7 @@ func (d *Driver) Connect(ctx context.Context) error {
 }
 
 // Close closes the database connection.
-func (d *Driver) Close(ctx context.Context) error {
+func (d *Driver) Close(_ context.Context) error {
 	if err := d.db.Close(); err != nil {
 		return ErrClose.Wrap(err)
 	}

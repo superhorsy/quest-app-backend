@@ -3,6 +3,8 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"github.com/getsentry/sentry-go"
+	"github.com/superhorsy/quest-app-backend/internal/core/helpers"
 	"net/http"
 	"strings"
 
@@ -31,6 +33,10 @@ func handleError(ctx context.Context, w http.ResponseWriter, err error) {
 		fallthrough
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
+		s := helpers.GetConfig(ctx).SentryDSN
+		if s != "" {
+			sentry.CaptureException(err)
+		}
 	}
 
 	// TODO we may need to strip additional error information

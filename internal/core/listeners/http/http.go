@@ -41,7 +41,7 @@ type Server struct {
 }
 
 // New instantiates a new instance of Server.
-func New(s Service, cfg Config) (*Server, error) {
+func New(s Service, cfg Config, ctx context.Context) (*Server, error) {
 	r := mux.NewRouter()
 	r.Use(tracingMiddleware)
 	r.Use(logTracingMiddleware)
@@ -57,8 +57,7 @@ func New(s Service, cfg Config) (*Server, error) {
 		server: &http.Server{
 			Addr: fmt.Sprintf(":%s", cfg.Port),
 			BaseContext: func(net.Listener) context.Context {
-				baseContext := context.Background()
-				return logging.With(baseContext, logging.From(baseContext))
+				return logging.With(ctx, logging.From(ctx))
 			},
 			Handler:           handler,
 			ReadHeaderTimeout: readHeaderTimeout,

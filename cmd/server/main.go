@@ -7,6 +7,7 @@ import (
 	"github.com/superhorsy/quest-app-backend/internal/config"
 	"github.com/superhorsy/quest-app-backend/internal/core/app"
 	"github.com/superhorsy/quest-app-backend/internal/core/drivers/psql"
+	"github.com/superhorsy/quest-app-backend/internal/core/helpers"
 	"github.com/superhorsy/quest-app-backend/internal/core/listeners/http"
 	"github.com/superhorsy/quest-app-backend/internal/core/logging"
 	"github.com/superhorsy/quest-app-backend/internal/events"
@@ -19,7 +20,6 @@ import (
 	"github.com/superhorsy/quest-app-backend/internal/users"
 	userStore "github.com/superhorsy/quest-app-backend/internal/users/store"
 	"go.uber.org/zap"
-	"os"
 )
 
 func main() {
@@ -33,9 +33,9 @@ func appStart(ctx context.Context, a *app.App) ([]app.Listener, error) {
 		return nil, err
 	}
 	a.Config = *cfg
+	ctx = context.WithValue(ctx, "config", &cfg.AppConfig)
 
-	initSentryIfEnvIsSet(ctx)
-	if err != nil {
+	if err := initSentry(ctx); err != nil {
 		return nil, err
 	}
 
@@ -74,7 +74,7 @@ func appStart(ctx context.Context, a *app.App) ([]app.Listener, error) {
 	httpServer := httptransport.New(u, q, db.GetDB(), m)
 
 	// Create an HTTP server
-	h, err := http.New(httpServer, cfg.HTTP)
+	h, err := http.New(httpServer, cfg.HTTP, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -85,11 +85,11 @@ func appStart(ctx context.Context, a *app.App) ([]app.Listener, error) {
 	}, nil
 }
 
-func initSentryIfEnvIsSet(ctx context.Context) error {
-	sentryDsn := os.Getenv("SENTRY_DSN")
+func initSentry(ctx context.Context) error {
+	sentryDsn := helpers.GetConfig(ctx).SentryDSN
 	if sentryDsn != "" {
 		return sentry.Init(sentry.ClientOptions{
-			Dsn: os.Getenv("SENTRY_DSN"),
+			Dsn: sentryDsn,
 			// Set TracesSampleRate to 1.0 to capture 100%
 			// of transactions for performance monitoring.
 			// We recommend adjusting this value in production,

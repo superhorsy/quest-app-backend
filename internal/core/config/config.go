@@ -14,6 +14,7 @@ type AppConfig struct {
 	PSQL           psql.Config `yaml:"psql"`
 	PurgeOnRestart bool        `yaml:"purge_on_restart"`
 	JwtPrivateKey  string      `env:"JWT_PRIVATE_KEY" validate:"required"`
+	SentryDSN      string      `env:"SENTRY_DSN"`
 }
 
 func (*AppConfig) Set(appConfig AppConfig) {
