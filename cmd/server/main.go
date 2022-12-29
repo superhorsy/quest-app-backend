@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"github.com/cenkalti/backoff/v4"
+	"github.com/getsentry/sentry-go"
 	"github.com/superhorsy/quest-app-backend/internal/config"
 	"github.com/superhorsy/quest-app-backend/internal/core/app"
 	"github.com/superhorsy/quest-app-backend/internal/core/drivers/psql"
@@ -18,6 +19,7 @@ import (
 	"github.com/superhorsy/quest-app-backend/internal/users"
 	userStore "github.com/superhorsy/quest-app-backend/internal/users/store"
 	"go.uber.org/zap"
+	"os"
 )
 
 func main() {
@@ -27,9 +29,12 @@ func main() {
 func appStart(ctx context.Context, a *app.App) ([]app.Listener, error) {
 	// Load configuration from config/config.yaml which contains details such as DB connection params
 	cfg, err := config.Load(ctx)
-	//
+	if err != nil {
+		return nil, err
+	}
 	a.Config = *cfg
 
+	initSentryIfEnvIsSet(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -78,6 +83,22 @@ func appStart(ctx context.Context, a *app.App) ([]app.Listener, error) {
 	return []app.Listener{
 		h,
 	}, nil
+}
+
+func initSentryIfEnvIsSet(ctx context.Context) error {
+	sentryDsn := os.Getenv("SENTRY_DSN")
+	if sentryDsn != "" {
+		return sentry.Init(sentry.ClientOptions{
+			Dsn: os.Getenv("SENTRY_DSN"),
+			// Set TracesSampleRate to 1.0 to capture 100%
+			// of transactions for performance monitoring.
+			// We recommend adjusting this value in production,
+			TracesSampleRate: 1.0,
+		})
+	} else {
+		logging.From(ctx).Warn("Sentry DSN not set, continuing without it")
+		return nil
+	}
 }
 
 func initDatabase(ctx context.Context, cfg *config.Config, a *app.App) (*psql.Driver, error) {
