@@ -233,7 +233,7 @@ func (s *Server) sendQuest(w http.ResponseWriter, r *http.Request) {
 			}{
 				Name: html.EscapeString(sendRequest.Name),
 				URL:  "https://questy.fun",
-				IMG:  "https://wsrv.nl/?url=questy.fun/files/10d26a38-2fdf-4f48-adff-3e052e7466f5.png",
+				IMG:  "https://questy.fun/files/10d26a38-2fdf-4f48-adff-3e052e7466f5.png",
 			}
 			subject := fmt.Sprintf("Ваш друг %s отправил вам квест на Questy.fun!", user.FullName())
 			err := helpers.SendEmail(sendRequest.Email, subject, "config/quest_invite.gohtml", templateData)
