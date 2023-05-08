@@ -4,6 +4,7 @@ package users
 
 import (
 	"context"
+
 	"github.com/superhorsy/quest-app-backend/internal/core/helpers"
 
 	"github.com/superhorsy/quest-app-backend/internal/core/errors"
@@ -71,7 +72,7 @@ func (u *Users) CreateUser(ctx context.Context, user *model.UserWithPass) (*mode
 	passwordHash := helpers.HashAndSalt([]byte(*user.Password))
 	user.Password = &passwordHash
 
-	// Not much validation needed before storing in the database as the database itself is handling most of that (postgres)
+	// Not much validation needed before storing in the database as the database itself is handling most of that
 	// if we were to use something else you would probably want to add validation of inputs here
 	createdUser, err := u.store.InsertUser(ctx, user)
 	if err != nil {

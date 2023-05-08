@@ -26,6 +26,7 @@ require (
 
 require (
 	github.com/Microsoft/go-winio v0.5.2 // indirect
+	github.com/cockroachdb/cockroach-go/v2 v2.1.1 // indirect
 	github.com/docker/docker v20.10.14+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect

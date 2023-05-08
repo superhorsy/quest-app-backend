@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS steps
 CREATE TABLE IF NOT EXISTS quest_to_email
 (
     quest_id uuid    NOT NULL,
-    email    email   NOT NULL,
+    email    VARCHAR   NOT NULL,
     "name"     VARCHAR NOT NULL,
     PRIMARY KEY (quest_id, email),
     CONSTRAINT quest_id_email_unique UNIQUE (quest_id, email),

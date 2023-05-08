@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/cenkalti/backoff/v4"
 	"github.com/getsentry/sentry-go"
 	"github.com/superhorsy/quest-app-backend/internal/config"
@@ -39,14 +40,14 @@ func appStart(ctx context.Context, a *app.App) ([]app.Listener, error) {
 		return nil, err
 	}
 
-	// Connect to the postgres DB
+	// Connect to the DB
 	db, err := initDatabase(ctx, cfg, a)
 	if err != nil {
 		return nil, err
 	}
 
 	// Run our migrations which will update the DB or create it if it doesn't exist
-	if err := db.MigratePostgres(ctx, "file://migrations"); err != nil {
+	if err := db.Migrate(ctx, "file://migrations"); err != nil {
 		return nil, err
 	}
 	a.OnShutdown(func() {

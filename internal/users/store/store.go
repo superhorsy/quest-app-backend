@@ -42,7 +42,7 @@ var timeNow = func() *time.Time {
 	return &now
 }
 
-// DB represents a type for interfacing with a postgres database.
+// DB represents a type for interfacing with a database.
 type DB interface {
 	NamedQueryContext(ctx context.Context, query string, arg interface{}) (*sqlx.Rows, error)
 	GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error
@@ -51,7 +51,7 @@ type DB interface {
 	QueryxContext(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error)
 }
 
-// Store provides functionality for working with a postgres database.
+// Store provides functionality for working with a database.
 type Store struct {
 	db DB
 }

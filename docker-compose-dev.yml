@@ -15,20 +15,5 @@ services:
     cap_add:
       - SYS_PTRACE
     command: /dlv --headless --listen=:40000 --api-version=2 exec ./server
-    depends_on:
-      - postgres
     volumes:
       - ./files:/root/files:consistent
-  postgres:
-    image: postgres:alpine
-    restart: always
-    environment:
-      POSTGRES_USER: guest
-      POSTGRES_PASSWORD: guest
-      POSTGRES_DB: quest-app-db
-    ports:
-      - ${DB_PORT:-5432}:5432
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-volumes:
-  pgdata:

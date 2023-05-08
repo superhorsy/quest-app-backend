@@ -2,9 +2,9 @@ package psql
 
 import (
 	"context"
-	"github.com/golang-migrate/migrate/v4"
 
-	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/cockroachdb"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // import file driver for migrate
 	"github.com/superhorsy/quest-app-backend/internal/core/errors"
 	"github.com/superhorsy/quest-app-backend/internal/core/logging"
@@ -12,21 +12,21 @@ import (
 
 const (
 	// ErrDriverInit is returned when we cannot initialize the driver.
-	ErrDriverInit = errors.Error("failed to initialize postgres driver")
+	ErrDriverInit = errors.Error("failed to initialize db driver")
 	// ErrMigrateInit is returned when we cannot initialize migration driver.
 	ErrMigrateInit = errors.Error("failed to initialize migration driver")
 	// ErrMigration is returned when we cannot run a migration.
 	ErrMigration = errors.Error("failed to migrate database")
 )
 
-// MigratePostgres migrates the database to the latest version.
-func (d *Driver) MigratePostgres(ctx context.Context, migrationsPath string) error {
-	driver, err := postgres.WithInstance(d.db.DB, &postgres.Config{})
+// Migrate migrates the database to the latest version.
+func (d *Driver) Migrate(ctx context.Context, migrationsPath string) error {
+	driver, err := cockroachdb.WithInstance(d.db.DB, &cockroachdb.Config{})
 	if err != nil {
 		return ErrDriverInit.Wrap(err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance(migrationsPath, "postgres", driver)
+	m, err := migrate.NewWithDatabaseInstance(migrationsPath, "questy", driver)
 	if err != nil {
 		return ErrMigrateInit.Wrap(err)
 	}
@@ -46,12 +46,12 @@ func (d *Driver) MigratePostgres(ctx context.Context, migrationsPath string) err
 
 // RevertMigrations reverts the database to the previous version.
 func (d *Driver) RevertMigrations(ctx context.Context, migrationsPath string) error {
-	driver, err := postgres.WithInstance(d.db.DB, &postgres.Config{})
+	driver, err := cockroachdb.WithInstance(d.db.DB, &cockroachdb.Config{})
 	if err != nil {
 		return ErrDriverInit.Wrap(err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance(migrationsPath, "postgres", driver)
+	m, err := migrate.NewWithDatabaseInstance(migrationsPath, "questy", driver)
 	if err != nil {
 		return ErrMigrateInit.Wrap(err)
 	}

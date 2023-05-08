@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "5f7af348-67ff-47d8-b6ed-0d87a4fc377d",
+		"_postman_id": "7c7af857-a291-44f6-a007-f531baf8c99c",
 		"name": "Quest",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "24504428"
@@ -976,15 +976,13 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{scheme}}://{{host}}:{{port}}/api/v1/health",
+					"raw": "{{scheme}}://{{host}}:{{port}}/health",
 					"protocol": "{{scheme}}",
 					"host": [
 						"{{host}}"
 					],
 					"port": "{{port}}",
 					"path": [
-						"api",
-						"v1",
 						"health"
 					]
 				}

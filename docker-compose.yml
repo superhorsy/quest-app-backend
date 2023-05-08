@@ -7,20 +7,5 @@ services:
       - ${APP_PORT:-8080}:8080
     env_file:
       - ./.env
-    depends_on:
-      - postgres
     volumes:
       - ./files:/root/files:consistent
-  postgres:
-    image: postgres:alpine
-    restart: always
-    environment:
-      POSTGRES_USER: guest
-      POSTGRES_PASSWORD: guest
-      POSTGRES_DB: quest-app-db
-    ports:
-      - ${DB_PORT:-5432}:5432
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-volumes:
-  pgdata:
