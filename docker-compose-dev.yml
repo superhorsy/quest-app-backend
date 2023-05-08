@@ -17,3 +17,4 @@ services:
     command: /dlv --headless --listen=:40000 --api-version=2 exec ./server
     volumes:
       - ./files:/root/files:consistent
+      - $HOME/.postgresql/:/root/.postgresql # pass postgres sql (or cockroach sql) root cert

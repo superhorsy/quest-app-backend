@@ -9,3 +9,4 @@ services:
       - ./.env
     volumes:
       - ./files:/root/files:consistent
+      - $HOME/.postgresql/:/root/.postgresql  # pass postgres sql (or cockroach sql) root cert
