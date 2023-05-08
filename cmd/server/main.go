@@ -106,7 +106,9 @@ func initDatabase(ctx context.Context, cfg *config.Config, a *app.App) (*psql.Dr
 	db := psql.New(cfg.PSQL)
 
 	err := backoff.Retry(func() error {
-		return db.Connect(ctx)
+		err := db.Connect(ctx)
+		logging.From(ctx).Error(err.Error())
+		return err
 	}, backoff.NewExponentialBackOff())
 	if err != nil {
 		return nil, err
